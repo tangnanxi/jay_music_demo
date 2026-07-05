@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=393, initial-scale=1.0">
+<title>遗失的母带 · 稻香密室（图片版）</title>
+<style>
+  :root{
+    --straw:#d9b46a; --straw-d:#a8842f; --paper:#e9dcc0; --ink:#2c2114;
+    --red:#c8102e; --gold:#f0c75e; --txt:#f3ead6; --sub:#cdb78f; --uv:#9be8ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  html,body{height:100%}
+  body{background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  #app{width:393px;height:852px;background:#0c0804;position:relative;overflow:hidden;
+    transform-origin:center center;box-shadow:0 0 60px rgba(0,0,0,.85)}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:26px;
+    background:#000;border-radius:0 0 16px 16px;z-index:90}
+  .bgm-btn{position:absolute;top:33px;right:12px;z-index:95;width:34px;height:34px;border-radius:50%;
+    background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.35);color:#fff;font-size:15px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+  .bgm-btn:active{transform:scale(.9)}
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;animation:fade .5s}
+  .screen.active{display:flex}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .btn{background:var(--straw);color:#2a1d09;border:none;border-radius:24px;padding:14px;
+    font-size:15px;font-weight:800;width:100%;cursor:pointer;letter-spacing:2px;transition:.2s}
+  .btn:active{transform:scale(.97)}
+  .btn.ghost{background:transparent;border:1px solid var(--straw-d);color:var(--straw)}
+
+  #intro{background:radial-gradient(120% 70% at 50% 0%,#4a3a22,#2a1f12 55%,#19110a 100%);justify-content:center}
+  .pad{padding:30px 24px}
+  h1{font-size:24px;letter-spacing:1px;color:var(--straw);margin-bottom:12px;line-height:1.4}
+  .sub{color:var(--sub);font-size:13.5px;line-height:1.9}
+  .tag{display:inline-block;font-size:11px;color:var(--straw);border:1px solid var(--straw-d);
+    border-radius:20px;padding:3px 12px;margin-bottom:16px;letter-spacing:1px}
+  .pscript{font-size:12px;color:#9bbf6a;margin-top:18px;font-style:italic}
+
+  #game{background:#0c0804}
+  .topbar{position:absolute;top:30px;left:0;right:0;z-index:30;display:flex;flex-direction:column;
+    align-items:flex-start;gap:7px;padding:8px 54px 8px 14px}
+  .scene-title{font-size:12px;color:var(--txt);letter-spacing:2px;background:rgba(0,0,0,.5);
+    padding:5px 12px;border-radius:14px}
+  .inv{display:flex;gap:6px}
+  .code{font-size:12px;font-weight:800;letter-spacing:1px;color:#2a1d09;background:var(--straw);
+    border-radius:7px;padding:3px 8px}
+
+  .viewport{flex:1;position:relative;overflow:hidden;background:#0c0804;
+    display:flex;align-items:center;justify-content:center}
+  .layer{position:absolute;inset:0;display:none;align-items:center;justify-content:center}
+  .layer.active{display:flex}
+  /* 整图按 9:16 完整显示，不裁剪；热区相对图片对齐 */
+  .frame-full{position:absolute;inset:0;background-size:contain;background-position:center;background-repeat:no-repeat;opacity:0;transition:opacity .5s ease;z-index:1}
+  .frame-full.loaded{opacity:1}
+  .frame .spot{z-index:3}
+  .frame{position:relative;width:100%;aspect-ratio:9/16;max-height:100%;background-color:#0c0804;
+    background-size:contain;background-position:center;background-repeat:no-repeat}
+
+  .spot{position:absolute;transform:translate(-50%,-50%);min-width:58px;height:56px;padding:0 8px;
+    border-radius:30px;border:2px dashed rgba(255,255,255,.55);background:rgba(0,0,0,.22);
+    display:flex;align-items:center;justify-content:center;font-size:10.5px;color:#fff;cursor:pointer;
+    text-shadow:0 1px 2px #000;transition:.18s;text-align:center;line-height:1.2}
+  .spot:active{transform:translate(-50%,-50%) scale(.9)}
+  .spot.clue{border-color:var(--gold);box-shadow:0 0 0 0 rgba(240,199,94,.5);animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,199,94,.5)}50%{box-shadow:0 0 0 12px rgba(240,199,94,0)}}
+  .spot.done{opacity:.25;border-style:solid;animation:none}
+
+  .npcbar{position:relative;z-index:20;background:rgba(14,9,4,.96);border-top:1px solid #5a4427;
+    padding:10px 13px;display:flex;gap:9px;align-items:flex-start;min-height:62px}
+  .npcbar .face{font-size:24px;flex-shrink:0}
+  .npcbar .line{font-size:12px;line-height:1.6;color:var(--txt)}
+  .npcbar .line b{color:var(--gold)}
+  .tabs{display:grid;grid-template-columns:repeat(4,1fr);background:#0e0904;border-top:1px solid #5a4427}
+  .tabs button{padding:9px 4px;background:none;border:none;color:var(--sub);font-size:11px;cursor:pointer;
+    border-top:2px solid transparent}
+  .tabs button .ic{display:block;font-size:18px;margin-bottom:2px}
+  .tabs button.on{color:var(--gold);border-top-color:var(--gold);background:rgba(240,199,94,.06)}
+
+  .modal{position:absolute;inset:0;background:rgba(8,5,2,.88);display:none;align-items:center;
+    justify-content:center;z-index:60;padding:24px}
+  .modal.show{display:flex}
+  .mbox{background:var(--paper);color:var(--ink);border-radius:16px;padding:20px;width:100%;
+    max-height:80%;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+  .mbox h3{font-size:17px;margin-bottom:8px}
+  .mbox .obj{font-size:50px;text-align:center;margin:4px 0 10px}
+  .lyric{background:#fff;border-left:3px solid var(--red);padding:9px 12px;font-size:13px;
+    line-height:1.7;border-radius:0 8px 8px 0;margin:8px 0}
+  .lyric .mark{color:var(--red);font-weight:700}
+  .note{font-size:12.5px;color:#6a5a44;line-height:1.7;margin-top:8px}
+  .codebig{font-size:30px;font-weight:900;letter-spacing:8px;text-align:center;color:var(--red);margin:10px 0}
+  .mbtn{background:var(--ink);color:var(--paper);border:none;border-radius:22px;padding:12px;
+    width:100%;font-weight:700;cursor:pointer;margin-top:12px;font-size:14px}
+  .kp-disp{font-size:30px;letter-spacing:12px;text-align:center;color:var(--red);min-height:40px;
+    background:#fff;border-radius:10px;padding:6px;margin-bottom:10px;font-weight:800}
+  /* 木质拨号锁弹窗 */
+  .woodbox{background:
+    linear-gradient(160deg,rgba(255,255,255,.06),rgba(0,0,0,.18)),
+    repeating-linear-gradient(92deg,#6e4a2a 0 22px,#664428 22px 44px),
+    linear-gradient(180deg,#724e2c,#553a22)!important;
+    border:2px solid #8a5e34;box-shadow:0 20px 50px rgba(0,0,0,.6), inset 0 0 0 3px rgba(0,0,0,.25)}
+  .woodbox h3{color:#f3e6c8}
+  .woodbox .note{color:#e3cda2!important}
+  .woodbox .kp-disp{background:#efe3c6}
+  /* 旋转拨号盘（黄铜+奶油盘面） */
+  .dial-wrap{position:relative;width:232px;height:232px;margin:10px auto 14px}
+  .dial{position:absolute;inset:0;border-radius:50%;
+    background:radial-gradient(circle at 50% 40%,#f3ead0,#dcc99c 78%,#cbb585 100%);
+    box-shadow:0 8px 22px rgba(0,0,0,.5),
+      inset 0 0 0 8px #caa24a, inset 0 0 0 12px #8a6322, inset 0 0 26px rgba(120,85,35,.45)}
+  .hole{position:absolute;width:40px;height:40px;border-radius:50%;
+    background:radial-gradient(circle at 42% 35%,#f6efda,#dccaa0);border:2px solid #a87f2c;
+    display:flex;align-items:center;justify-content:center;color:#4a3414;font-weight:800;font-size:17px;
+    cursor:pointer;transform:translate(-50%,-50%);box-shadow:inset 0 2px 4px rgba(120,85,35,.4)}
+  .hole:active{background:#e7d4a4}
+  .hub{position:absolute;top:50%;left:50%;width:74px;height:74px;border-radius:50%;transform:translate(-50%,-50%);z-index:3;
+    background:radial-gradient(circle at 40% 34%,#eccb74,#a9802c 80%,#86641f 100%);
+    display:flex;align-items:center;justify-content:center;font-size:12px;color:#3a280c;font-weight:800;
+    box-shadow:0 2px 7px rgba(0,0,0,.45), inset 0 1px 2px rgba(255,255,255,.4)}
+  .dial-stop{position:absolute;left:172px;top:196px;width:15px;height:30px;background:#7a5226;border-radius:5px;
+    transform:translate(-50%,-50%) rotate(-34deg);z-index:4;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+  .uv{margin-top:10px;background:#0b1a22;color:var(--uv);border-radius:8px;padding:10px;font-size:12.5px;
+    line-height:1.7;text-shadow:0 0 8px var(--uv);border:1px solid #1d3a45}
+  .uv b{color:#fff}
+
+  #finale{background:linear-gradient(180deg,#e9f5ec 0%,#ffffff 46%);justify-content:center;align-items:center;text-align:center;overflow:hidden}
+  #finale.red{background:
+    radial-gradient(80% 55% at 50% 12%, rgba(110,205,140,.45), transparent 62%),
+    linear-gradient(180deg,#e1f3e7 0%,#ffffff 52%)}
+  .fwrap{position:relative;width:100%;height:100%;overflow:hidden;z-index:2}
+  /* 过场层：居中覆盖，不参与最终布局 */
+  .cine{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:40px 24px;text-align:center;transition:opacity .6s;z-index:3}
+  .cine.hide{opacity:0;pointer-events:none}
+  /* 定格层：刚好一屏，不滚动 */
+  .ending{position:absolute;inset:0;display:flex;flex-direction:column;
+    background:linear-gradient(180deg,#e9f5ec 0%,#ffffff 46%);color:#243528;
+    padding:8px 20px 20px;opacity:0;transition:opacity .8s;z-index:4}
+  .ending.show1{opacity:1}
+  .ehead{display:flex;align-items:center;justify-content:space-between;margin-top:30px;padding:4px 0}
+  .ehead .nav{font-size:22px;color:#3b8a52;cursor:pointer;width:28px;text-align:center}
+  .ehead .etitle{font-size:16px;font-weight:800;color:#243528}
+  .epill{align-self:center;margin:6px 0 2px;font-size:12px;color:#3a9b5f;background:#e4f3e8;
+    border:1px solid #bfe3c9;border-radius:20px;padding:4px 13px}
+  .qcard{background:linear-gradient(135deg,#6cc47e,#52ad6c);color:#fff;border-radius:18px;
+    padding:22px 20px;font-size:19px;font-weight:800;line-height:1.6;text-align:center;position:relative;
+    margin:10px 0 2px;box-shadow:0 10px 26px rgba(80,170,110,.35)}
+  .qcard .qmark{position:absolute;top:2px;left:14px;font-size:38px;opacity:.45;font-family:Georgia,serif}
+  .enpc{display:flex;gap:10px;align-items:flex-start;margin-top:14px}
+  .enpc .eav{width:34px;height:34px;border-radius:50%;background:#dff0e4;display:flex;align-items:center;
+    justify-content:center;font-size:18px;flex-shrink:0}
+  .enpc .ebub{background:#f4f7f4;border:1px solid #e4ece5;border-radius:12px;padding:11px 13px;
+    font-size:12.5px;line-height:1.6;color:#47574b}
+  .espacer{flex:1;min-height:6px}
+  .ebtns{display:flex;flex-direction:column;gap:10px}
+  .gbtn{background:linear-gradient(180deg,#5fc07d,#45a865);color:#fff;border:none;border-radius:26px;
+    padding:15px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 20px rgba(80,170,110,.4);letter-spacing:1px}
+  .gbtn:active{transform:scale(.98)}
+  .gbtn.ghost{background:#fff;color:#3a9b5f;border:1px solid #cfe6d5;box-shadow:none}
+  .success{font-size:22px;font-weight:900;color:#2f9d59;opacity:0;transform:scale(.7);
+    letter-spacing:2px;text-shadow:0 0 18px rgba(95,192,125,.5);margin-bottom:8px;transition:.4s}
+  .skid{font-size:13px;color:#5c7365;opacity:0;letter-spacing:5px;margin-bottom:4px}
+  .ayo{font-size:30px;font-weight:900;letter-spacing:3px;opacity:0;transform:scale(.6);transition:.4s;
+    color:#2c8a4d;text-shadow:0 2px 18px rgba(95,192,125,.35)}
+  .albumcard{opacity:0;margin-top:16px;width:118px;height:118px;border-radius:12px;position:relative;
+    background:linear-gradient(135deg,#74cc88 0%,#46a866 55%,#2f8a50 100%);
+    box-shadow:0 12px 30px rgba(70,150,100,.4);display:flex;align-items:center;justify-content:center;
+    border:2px solid rgba(255,255,255,.45);transition:.5s}
+  .albumcard .t{font-size:15px;font-weight:900;color:#10331e;letter-spacing:1px;line-height:1.35;
+    transform:rotate(-6deg);text-shadow:0 1px 0 rgba(255,255,255,.35)}
+  .albumcap{font-size:10px;color:#5c7365;margin-top:6px}
+  .vinyl-stage{margin-top:18px;opacity:0;transition:opacity .8s;display:flex;flex-direction:column;align-items:center}
+  .vinyl{width:152px;height:152px;border-radius:50%;margin:10px auto 4px;position:relative;transition:transform .9s;
+    transform:translateY(26px);
+    background:
+      repeating-radial-gradient(circle at 50% 50%,rgba(255,255,255,.05) 0 1px,transparent 1px 4px),
+      radial-gradient(circle at 50% 42%,#33333a 0 30%,#191920 30% 62%,#0f0f13 62% 100%);
+    box-shadow:0 16px 34px rgba(0,0,0,.34),0 0 48px rgba(47,157,89,.18),
+      inset 0 0 0 1px rgba(255,255,255,.06),inset 0 2px 18px rgba(0,0,0,.5)}
+  .vinyl::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:6;
+    background:linear-gradient(118deg,transparent 34%,rgba(255,255,255,.15) 48%,transparent 58%)}
+  .vinyl .lbl{position:absolute;top:50%;left:50%;width:42%;height:42%;transform:translate(-50%,-50%);
+    display:flex;align-items:center;justify-content:center;z-index:2;border-radius:50%;
+    font-size:13px;color:#0e2c1a;font-weight:900;letter-spacing:1px;
+    background:radial-gradient(circle at 50% 50%,#eafbf0 0 3px,transparent 3px),
+      radial-gradient(circle at 50% 36%,#43b877,#2f9d59 68%,#25864a 100%);
+    box-shadow:0 0 0 4px rgba(15,15,19,.9),inset 0 1px 3px rgba(255,255,255,.4)}
+  /* 黑胶中心专辑封面（来自 QQ音乐 API，未拿到时不显示、保留绿色中心） */
+  .vinyl .vcover{position:absolute;top:50%;left:50%;width:42%;height:42%;border-radius:50%;
+    transform:translate(-50%,-50%);z-index:4;display:none;
+    background:#0f0f13 center center/cover no-repeat;
+    box-shadow:0 0 0 4px rgba(15,15,19,.9),inset 0 0 0 2px rgba(255,255,255,.25)}
+  .vinyl .vcover .btag{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);
+    font-size:9px;font-weight:800;color:#fff;background:rgba(0,0,0,.55);border-radius:8px;padding:1px 6px;letter-spacing:1px}
+  .goldline{opacity:0;margin-top:18px;font-size:16px;font-weight:800;line-height:1.7;padding:14px 18px;
+    color:#fff3d4;border-radius:14px;max-width:300px;transition:.5s;
+    background:linear-gradient(180deg,rgba(240,199,94,.18),rgba(240,199,94,.05));
+    border:1px solid rgba(240,199,94,.5);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .chorus{font-size:12.5px;color:#37915a;opacity:0;margin-top:14px;line-height:1.9;transition:.5s;font-weight:600}
+  .mono{font-size:12px;color:#5f7a66;opacity:0;margin-top:8px;font-style:italic;transition:.5s}
+  .npc-end{font-size:12px;color:#fff;opacity:0;margin-top:14px;line-height:1.65;max-width:322px;transition:.5s;
+    background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.13);padding:11px 14px;border-radius:12px}
+  .finbtns{opacity:0;margin-top:18px;width:100%;max-width:322px;display:flex;flex-direction:column;gap:10px;transition:.5s}
+  .ucard{background:linear-gradient(160deg,#7d6cf2 0%,#9a6ee4 55%,#c06fd6 100%);border-radius:18px;
+    padding:18px 16px;color:#fff;text-align:center;position:relative;box-shadow:0 14px 32px rgba(120,90,230,.45);
+    margin:6px 0 4px}
+  .ucard .uhead{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:1.5px;opacity:.95}
+  .ucard .ux{background:rgba(0,0,0,.28);border-radius:10px;padding:2px 9px;font-weight:800;letter-spacing:0}
+  .ucard .uicon{width:66px;height:66px;border-radius:50%;background:rgba(255,255,255,.24);
+    display:flex;align-items:center;justify-content:center;font-size:30px;margin:16px auto 12px;
+    box-shadow:inset 0 0 0 4px rgba(255,255,255,.18)}
+  .ucard .ugenre{font-size:25px;font-weight:900;letter-spacing:1px;text-shadow:0 2px 8px rgba(0,0,0,.2)}
+  .ucard .usub{font-size:12px;opacity:.9;margin-top:3px;letter-spacing:1px}
+  .udesc{font-size:12.5px;color:#6a5a44;line-height:1.7;text-align:center;margin:14px 6px 4px}
+  .lvlclear{font-size:12px;letter-spacing:3px;color:#31a06a;font-weight:800;text-align:center}
+  .grain{position:absolute;top:-20px;font-size:16px;animation:fall linear forwards;z-index:1}
+  @keyframes fall{to{transform:translateY(900px) rotate(360deg);opacity:0}}
+  .show1{opacity:1!important;transform:none!important}
+
+  /* ===== 新增：曲风大闯关 商业化流程四屏 ===== */
+  #home{background:
+    radial-gradient(95% 55% at 50% 17%,rgba(47,157,89,.18),transparent 62%),
+    linear-gradient(180deg,#e0f1e7 0%,#f1faf4 46%,#ffffff 100%)}
+  .hbar{display:flex;align-items:center;justify-content:space-between;margin-top:30px;padding:10px 16px}
+  .hbar .nav{font-size:22px;color:#3b8a52;width:28px;text-align:center;cursor:pointer}
+  .hbar .htitle{font-size:16px;font-weight:800;color:#243528}
+  .home-body{flex:1;display:flex;flex-direction:column;align-items:center;padding:4px 22px 16px;overflow-y:auto}
+  .event-pill{align-self:center;font-size:11.5px;color:#2f9d59;background:#e2f3e8;border:1px solid #bfe3c9;border-radius:20px;padding:4px 14px;margin:2px 0 12px;letter-spacing:.5px}
+  .home-vinyl{width:194px;height:194px;border-radius:50%;margin:8px auto 22px;position:relative;
+    background:
+      repeating-radial-gradient(circle at 50% 50%,rgba(255,255,255,.05) 0 1px,transparent 1px 4px),
+      radial-gradient(circle at 50% 42%,#34343b 0 30%,#1a1a1f 30% 62%,#0f0f13 62% 100%);
+    box-shadow:0 24px 52px rgba(16,26,20,.42),0 0 74px rgba(47,157,89,.22),
+      inset 0 0 0 1px rgba(255,255,255,.07),inset 0 2px 22px rgba(0,0,0,.55)}
+  /* 玻璃高光扫过 */
+  .home-vinyl::before{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:5;
+    background:linear-gradient(118deg,transparent 32%,rgba(255,255,255,.17) 47%,transparent 58%)}
+  /* 唱片中心标签 + 主轴孔 */
+  .home-vinyl::after{content:"";position:absolute;top:50%;left:50%;width:40%;height:40%;border-radius:50%;
+    transform:translate(-50%,-50%);z-index:2;
+    background:radial-gradient(circle at 50% 50%,#eafbf0 0 4px,transparent 4px),
+      radial-gradient(circle at 50% 36%,#43b877,#2f9d59 68%,#25864a 100%);
+    box-shadow:0 0 0 5px rgba(15,15,19,.92),inset 0 1px 3px rgba(255,255,255,.4),0 3px 10px rgba(0,0,0,.45)}
+  .home-vinyl .hv-cover{position:absolute;top:50%;left:50%;width:40%;height:40%;border-radius:50%;transform:translate(-50%,-50%);z-index:4;display:none;background:#0f0f13 center center/cover no-repeat;box-shadow:0 0 0 5px rgba(15,15,19,.92),inset 0 0 0 2px rgba(255,255,255,.25),0 3px 10px rgba(0,0,0,.45)}
+  .home-title{font-size:29px;font-weight:900;color:#20302a;letter-spacing:1px;margin-bottom:7px}
+  .home-sub{font-size:12.5px;color:#5c7365;margin-bottom:15px;text-align:center}
+  .progress-pill{font-size:12.5px;color:#3a6b4c;background:#eef6f0;border:1px solid #d5e9db;border-radius:20px;padding:6px 16px;margin-bottom:16px}
+  .progress-pill b{color:#2f9d59;font-weight:800}
+  .home-stats{display:grid;grid-template-columns:repeat(3,1fr);width:100%;background:#fff;border:1px solid #e8f0ea;border-radius:18px;padding:16px 0;box-shadow:0 10px 26px rgba(60,120,85,.10);margin-bottom:20px}
+  .home-stats .st{text-align:center;position:relative}
+  .home-stats .st+.st::before{content:"";position:absolute;left:0;top:16%;height:68%;width:1px;background:#eef3ef}
+  .home-stats .st .si{font-size:15px;line-height:1;margin-bottom:5px;opacity:.9}
+  .home-stats .st .v{font-size:20px;font-weight:900;color:#243528;line-height:1.1}
+  .home-stats .st .v.hl{color:#2f9d59}
+  .home-stats .st .k{font-size:11px;color:#5c7365;margin-top:4px}
+  .home-secttl{align-self:flex-start;font-size:12.5px;color:#5c7365;margin:2px 0 8px}
+  .theme-card{display:flex;align-items:center;gap:12px;width:100%;background:#fff;border:1px solid #e8f0ea;border-radius:16px;padding:14px;box-shadow:0 10px 24px rgba(60,120,85,.09)}
+  .theme-card:active{transform:scale(.99)}
+  .theme-card .ti{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#4bb377,#2f9d59);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff}
+  .theme-card .tn{font-size:15px;font-weight:800;color:#243528}
+  .theme-card .tc{font-size:11.5px;color:#5c7365;margin-top:2px}
+  .theme-card .tchev{margin-left:auto;color:#c2d2c8;font-size:18px}
+  .home-foot{width:100%;padding:16px 0 0}
+  .daily-left{text-align:center;font-size:11.5px;color:#5c7365;margin-top:10px}
+  #cleared{background:
+    radial-gradient(90% 48% at 50% 20%,rgba(139,124,240,.18),transparent 60%),
+    linear-gradient(180deg,#f3ede2 0%,#faf6ef 44%,#ffffff 100%);justify-content:flex-start;align-items:center;text-align:center}
+  .cl-share{position:absolute;top:38px;right:18px;font-size:20px;color:#3b8a52;cursor:pointer;z-index:5}
+  .cl-cleared{margin-top:62px;font-size:13px;letter-spacing:4px;color:#31a06a;font-weight:800}
+  .cl-title{font-size:30px;font-weight:900;color:#243528;margin:8px 0 6px}
+  .cl-meta{font-size:12.5px;color:#6e6353}
+  .up-card{width:150px;height:174px;border-radius:20px;position:relative;margin:26px auto 22px;
+    background:linear-gradient(160deg,#8b7cf0 0%,#9a6ee4 60%,#b96fd6 100%);
+    box-shadow:0 18px 40px rgba(120,90,230,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff}
+  .up-card .uc-head{position:absolute;top:12px;left:14px;right:14px;display:flex;justify-content:space-between;font-size:10px;letter-spacing:1.5px;opacity:.9}
+  .up-card .uc-x{background:rgba(0,0,0,.25);border-radius:9px;padding:1px 8px;font-weight:800;letter-spacing:0}
+  .up-card .uc-icon{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:inset 0 0 0 4px rgba(255,255,255,.18);margin-bottom:14px}
+  .up-card .uc-genre{font-size:19px;font-weight:900;letter-spacing:1px}
+  .up-card .uc-sub{font-size:11px;opacity:.9;margin-top:3px}
+  .cl-desc{font-size:13px;color:#6a5a44;line-height:1.7;margin:0 20px}
+  .cl-btns{position:absolute;left:0;right:0;bottom:26px;padding:0 24px;display:flex;flex-direction:column;gap:11px}
+  #usecard{background:
+    radial-gradient(100% 38% at 50% 0%,rgba(47,157,89,.09),transparent 62%),
+    linear-gradient(180deg,#edf3f0 0%,#f3f5f7 40%);justify-content:flex-start}
+  .uc-body{flex:1;overflow-y:auto;padding:18px 18px 104px}
+  .card-row{display:flex;align-items:center;gap:12px;background:#fff;border-radius:16px;padding:16px;border:1px solid #efeaff;box-shadow:0 12px 28px rgba(120,90,230,.10)}
+  .card-row .cr-ic{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#8b7cf0,#a774e0);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0}
+  .card-row .cr-name{font-size:15px;font-weight:800;color:#222}
+  .card-row .cr-x{font-size:11px;color:#8b7cf0;background:#efeaff;border-radius:8px;padding:1px 7px;font-weight:800;margin-left:4px}
+  .card-row .cr-desc{font-size:11.5px;color:#616b73;margin-top:3px}
+  .sec-label{font-size:12px;color:#616b73;margin:22px 4px 10px;letter-spacing:.3px}
+  .singer-box{background:#fff;border-radius:16px;padding:18px 16px;box-shadow:0 10px 24px rgba(40,60,50,.07)}
+  .singer-head{display:flex;align-items:center;gap:12px}
+  .singer-head .sav{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#f7889f,#f4a06a) center center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:800;flex-shrink:0}
+  .singer-head .snm{font-size:16px;font-weight:800;color:#222}
+  .singer-head .ssub{font-size:11.5px;color:#616b73;margin-top:2px}
+  .singer-head .schg{margin-left:auto;font-size:12.5px;color:#616b73}
+  .lv-row{display:flex;align-items:center;gap:8px;margin-top:16px}
+  .lv-tag{font-size:12px;font-weight:800;color:#e07a3a}
+  .lv-bar{flex:1;height:9px;border-radius:6px;background:#f0e6de;overflow:hidden;position:relative}
+  .lv-bar i{position:absolute;left:0;top:0;bottom:0;width:78%;border-radius:6px;background:linear-gradient(90deg,#f39a5c,#ef6f6f);transition:width .9s cubic-bezier(.3,.8,.3,1)}
+  .lv-note{font-size:12px;color:#616b73;margin-top:10px}
+  .lv-note b{color:#e07a3a}
+  .unlock-box{margin-top:18px;background:linear-gradient(180deg,#faf3e6,#f7eede);border:1px solid #ecdcc0;border-radius:16px;padding:16px;box-shadow:0 10px 24px rgba(170,130,60,.08)}
+  .uc-tip{margin-top:18px;font-size:11.5px;color:#616b73;text-align:center;line-height:1.7;
+    background:rgba(255,255,255,.65);border:1px solid #e7ebef;border-radius:12px;padding:12px 14px}
+  .unlock-box .ub-top{font-size:11.5px;color:#8a6a2f;margin-bottom:10px}
+  .unlock-badge{display:flex;align-items:center;gap:12px}
+  .unlock-badge .bg{width:52px;height:52px;border-radius:50%;background:linear-gradient(160deg,#d8b88a,#b8895a);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:inset 0 0 0 3px rgba(255,255,255,.35),0 4px 10px rgba(150,110,60,.3);flex-shrink:0}
+  .unlock-badge .bn{font-size:14px;font-weight:800;color:#5a4326}
+  .unlock-badge .bd{font-size:11.5px;color:#6e5c3f;margin-top:3px;line-height:1.5}
+  .foot-btn{position:absolute;left:0;right:0;bottom:0;padding:14px 16px 22px;background:linear-gradient(180deg,rgba(243,245,247,0),#f3f5f7 30%)}
+  #profile{background:
+    radial-gradient(120% 26% at 50% 0%,rgba(247,183,200,.16),transparent 60%),
+    #f1f3f5;justify-content:flex-start}
+  .pf-search{display:flex;align-items:center;gap:8px;margin:34px 14px 0;padding:9px 14px;background:#fff;border-radius:22px;box-shadow:0 3px 10px rgba(0,0,0,.04)}
+  .pf-search .ps-ic{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#5fc07d,#3aa865);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
+  .pf-search .ps-t{color:#616b73;font-size:13px;flex:1}
+  .pf-search .ps-r{color:#5f6b73;font-size:16px}
+  .pf-body{flex:1;overflow-y:auto;padding:14px 14px 74px}
+  .pf-user{display:flex;align-items:center;gap:12px}
+  .pf-user .pav{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#f7b7c8,#f7d7a0);position:relative;flex-shrink:0}
+  .pf-user .pav .wear{position:absolute;bottom:-2px;left:-2px;width:24px;height:24px;border-radius:50%;background:linear-gradient(160deg,#d8b88a,#b8895a);border:2px solid #f1f3f5;display:flex;align-items:center;justify-content:center;font-size:11px}
+  .pf-user .pnm{font-size:19px;font-weight:900;color:#222;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .pf-user .pbadge{font-size:10.5px;color:#b8895a;background:#f7edda;border-radius:10px;padding:2px 8px;font-weight:700}
+  .pf-user .pv{margin-left:auto;text-align:right}
+  .pf-user .pv .coin{font-size:20px;font-weight:900;color:#222}
+  .pf-user .pv .coin .y{color:#f0b429;font-size:13px}
+  .pf-user .pv .cash{font-size:10.5px;color:#616b73}
+  .pf-vip{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:11px}
+  .pf-vip .vtag{background:linear-gradient(135deg,#f0c75e,#e0a83a);color:#5a3d09;font-weight:800;border-radius:6px;padding:2px 8px}
+  .pf-vip .vren{color:#b58a3a}
+  .pf-vip .vbd{color:#e0567a;background:#fdeef2;border-radius:8px;padding:2px 8px}
+  .pf-member{display:flex;align-items:center;margin-top:14px}
+  .pf-member .mc{font-size:14px;font-weight:800;color:#2f9d59}
+  .pf-member .msub{font-size:11px;color:#616b73;margin-left:8px}
+  .pf-member .micons{margin-left:auto;display:flex;gap:16px;color:#5f6b73;font-size:11px;text-align:center}
+  .pf-member .micons .mi .ii{font-size:18px;display:block;margin-bottom:2px}
+  .pf-nums{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border-radius:16px;padding:14px 0;margin-top:14px;box-shadow:0 10px 24px rgba(40,55,50,.06)}
+  .pf-nums .n{text-align:center}
+  .pf-nums .n .nv{font-size:17px;font-weight:900;color:#222}
+  .pf-nums .n .nk{font-size:11px;color:#616b73;margin-top:3px}
+  .pf-badges{background:#fff;border-radius:16px;padding:15px 14px;margin-top:14px;box-shadow:0 10px 24px rgba(40,55,50,.06)}
+  .pf-badges .bh{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .pf-badges .bh .bt{font-size:14px;font-weight:800;color:#222}
+  .pf-badges .bh .ba{font-size:12px;color:#616b73}
+  .badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .badge-item{text-align:center}
+  .badge-item .bi{width:66px;height:66px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:inset 0 0 0 3px rgba(255,255,255,.35),0 5px 14px rgba(0,0,0,.12)}
+  .badge-item.b-milk .bi{background:linear-gradient(160deg,#d8b88a,#b8895a)}
+  .badge-item.b-star .bi{background:linear-gradient(160deg,#8fb0f0,#6d84e0)}
+  .badge-item.b-vinyl .bi{background:linear-gradient(160deg,#3a3a3a,#111)}
+  .badge-item .bn{font-size:12px;font-weight:700;color:#333}
+  .badge-item .bs{font-size:10.5px;margin-top:4px}
+  .badge-item .bs.on{color:#2f9d59}
+  .badge-item .bs.lock{color:#616b73}
+  .tabbar{position:absolute;left:0;right:0;bottom:0;height:56px;background:#fff;border-top:1px solid #eaedf0;display:grid;grid-template-columns:repeat(5,1fr);align-items:center}
+  .tabbar .tb{text-align:center;font-size:10.5px;color:#616b73;cursor:pointer}
+  .tabbar .tb .tbi{font-size:17px;display:block;margin-bottom:1px}
+  .tabbar .tb.on{color:#2f9d59}
+  .badge-pop{animation:badgePop .6s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes badgePop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+
+  /* 实时曲目元数据卡（来自后端 /api/song） */
+  .song-meta{display:flex;align-items:center;gap:12px;width:100%;background:#fff;border:1px solid #e8f0ea;border-radius:16px;padding:12px 13px;margin-top:12px;box-shadow:0 10px 24px rgba(60,120,85,.09)}
+  .song-meta .sm-cover{width:44px;height:44px;border-radius:9px;background:#e2f3e8 center center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:#2f9d59}
+  .song-meta .sm-title{font-size:14px;font-weight:800;color:#243528}
+  .song-meta .sm-tag{font-size:10.5px;color:#5c7365;margin-top:3px}
+  /* ===== 新等级体系：账号 EXP + 歌手喜欢值 结算 ===== */
+  .exp-medal{margin-top:20px;font-size:46px;font-weight:900;color:#2f9d59;letter-spacing:1px;line-height:1;text-shadow:0 4px 20px rgba(47,157,89,.28)}
+  .exp-medal .em-u{font-size:16px;font-weight:800;margin-left:6px;color:#3a9b5f;letter-spacing:1px}
+  .exp-cap{font-size:12px;color:#6e6353;margin:8px 0 0}
+  .grow-card{width:100%;max-width:340px;margin:20px auto 0;background:#fff;border:1px solid #ece6da;border-radius:18px;padding:16px 16px 4px;box-shadow:0 12px 30px rgba(120,100,60,.10);text-align:left}
+  .grow-row{margin-bottom:14px}
+  .grow-row .gr-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;color:#243528;margin-bottom:8px}
+  .grow-row .gr-lv{font-size:12px;color:#2f9d59}
+  .grow-row .gr-lv.orange{color:#e07a3a}
+  .gr-bar{height:9px;border-radius:6px;background:#eef1ee;overflow:hidden;position:relative}
+  .gr-bar.orange{background:#f4e8de}
+  .gr-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:linear-gradient(90deg,#43b877,#2f9d59)}
+  .gr-bar.orange i{background:linear-gradient(90deg,#f39a5c,#ef6f6f)}
+  .gr-sub{font-size:11px;color:#616b73;margin-top:7px;line-height:1.5}
+  .gr-sub b{color:#e07a3a}
+  .growx-hero{text-align:center;padding:8px 0 2px}
+  .gx-exp{font-size:40px;font-weight:900;color:#2f9d59;letter-spacing:1px;line-height:1;text-shadow:0 4px 18px rgba(47,157,89,.25)}
+  .gx-exp span{font-size:15px;font-weight:800;margin-left:4px}
+  .gx-cap{font-size:12px;color:#616b73;margin-top:9px}
+  /* 标题断行更自然、正文减少孤字 */
+  h1,.home-title,.cl-title,.etitle,.ucard .ugenre,.up-card .uc-genre{text-wrap:balance}
+  .home-sub,.cl-desc,.udesc{text-wrap:pretty;max-width:34ch;margin-left:auto;margin-right:auto}
+  .enpc .ebub,.lv-note,.sub{text-wrap:pretty}
+  /* 键盘可达：所有可交互元素统一焦点态 */
+  :focus-visible{outline:2px solid #2f9d59;outline-offset:2px;border-radius:6px}
+  .woodbox :focus-visible,.spot:focus-visible{outline-color:var(--gold)}
+
+  /* 尊重系统「减少动态效果」偏好 */
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{
+      animation-duration:.001ms!important;animation-iteration-count:1!important;
+      transition-duration:.001ms!important;scroll-behavior:auto!important}
+    .grain{display:none!important}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="notch"></div>
+  <audio id="bgm" loop preload="auto" src="assets/bgm.mp3"></audio>
+  <button id="bgmBtn" class="bgm-btn" onclick="toggleBgm()" title="背景音乐">🔈</button>
+
+  <!-- 01 主页：曲风大闯关 -->
+  <section class="screen active" id="home">
+    <div class="hbar">
+      <span class="nav" onclick="alert('Demo：返回上一页')">‹</span>
+      <span class="htitle">曲风大闯关</span>
+      <span class="nav" onclick="shareBrag()">⤴</span>
+    </div>
+    <div class="home-body">
+      <div class="event-pill">● 20周年限时活动</div>
+      <div class="home-vinyl"><div class="hv-cover" id="homeVinylCover"></div></div>
+      <div class="home-title">曲风大闯关</div>
+      <div class="home-sub">音乐解谜 · 逃出密室赢取专属曲风勋章</div>
+      <div class="progress-pill">当前进度 <b>第 8 关</b> / 共 30 关</div>
+      <div class="home-stats">
+        <div class="st"><div class="si">🏅</div><div class="v">3</div><div class="k">已得勋章</div></div>
+        <div class="st"><div class="si">🔥</div><div class="v">7</div><div class="k">连胜</div></div>
+        <div class="st"><div class="si">🏆</div><div class="v hl">5%</div><div class="k">排名 Top</div></div>
+      </div>
+      <div class="home-secttl">选择曲风主题</div>
+      <div class="theme-card" onclick="alert('Demo：切换曲风主题')">
+        <div class="ti">🎵</div>
+        <div><div class="tn">民谣 · Folk</div><div class="tc">共 8 种曲风可选</div></div>
+        <div class="tchev">›</div>
+      </div>
+      <div class="song-meta" id="songMeta" style="display:none">
+        <div class="sm-cover" id="smCover">🎵</div>
+        <div class="sm-info"><div class="sm-title" id="smTitle">—</div><div class="sm-tag" id="smTag">数据来自 QQ音乐 OpenAPI</div></div>
+      </div>
+      <div class="home-foot">
+        <button class="gbtn" onclick="startBgm();go('intro')">▶  开始游戏</button>
+        <div class="daily-left">今日剩余挑战次数 3 / 5</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="intro">
+    <div class="pad">
+      <span class="tag">密室逃脱 · 沉浸光影</span>
+      <h1>遗失的母带<br><span style="font-size:15px;color:var(--sub)">—— 时间倒流，回到最初的美好</span></h1>
+      <p class="sub">
+        这里是《稻香》MV 拍摄结束后的废弃片场。老板走得匆忙，遗落了一件关于「初心」的信物。<br><br>
+        片场残留着许多干扰的杂音，但真正的线索，只藏在《稻香》的旋律里。<br><br>
+        如果你看到一台穿梭时间的钟反着走，把时间倒回去，你会明白什么是真正的快乐。
+      </p>
+      <p class="pscript">ps：奶茶要半糖，全糖会胖。</p>
+      <button class="btn" style="margin-top:22px" onclick="startBgm();go('game');setScene('farm')">推开农舍木门 →</button>
+    </div>
+  </section>
+
+  <section class="screen" id="game">
+    <div class="topbar">
+      <span class="scene-title" id="sceneTitle">序幕 · 稻香农场</span>
+      <div class="inv">
+        <span id="inv_plane" class="code" style="display:none">0118</span>
+        <span id="inv_tea" class="code" style="display:none">1106</span>
+      </div>
+    </div>
+
+    <div class="viewport" id="viewport">
+      <!-- 场景1：农舍（黑钢琴 / 湿雨伞 干扰项 + 歌词手抄报） -->
+      <div class="layer active" id="L_farm">
+        <div class="frame" style="background-image:url('data:image/jpeg;base64,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')">
+          <div class="frame-full" data-full="assets/scene_farm.jpg"></div>
+          <div class="spot clue" style="left:55%;top:48%" onclick="usePoster()">歌词手抄报</div>
+          <div class="spot" style="left:40%;top:60%" onclick="useDistract('piano')">黑钢琴</div>
+          <div class="spot" style="left:82%;top:58%" onclick="useDistract('umbrella')">湿雨伞</div>
+        </div>
+      </div>
+      <!-- 场景2：稻草人 + 纸飞机（0118） -->
+      <div class="layer" id="L_scare">
+        <div class="frame" style="background-image:url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCACOAFADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDiSwJxnH86VMbgBgZ7mpCqjhYyTnqTz+XSmsXwQAcgZIx0qHobp32JAsYySvmN0xnH/wBelUkrtOzI/OtjwpDYzX5N/h9qZROzH3+laGv6ba3shks4kgdemwYBFZTrKMuUcIX1aOTeFmHPOPSmGIqQVDA+tTNHLBIUbejDs1KtwUIJCvg9Kq7NbR9CBZG2jcA31pweNhyCo/OpS8MnLKVJ9RTPIU/6th+FFws/Ub5IcfKyn2zzTGiZcgDJFEkWzG7B+ppPMZfutuHowpol2NvwzdWcGpo15EJRtIQHoG9/Wt7Vo4dU3FgInbjcoxx2H0rh13hgU6jkYNdRYXrXFsjNw46+xrnrRd1JDjZGU2n3FncBhlmQ5BFdDFPuhVwuCR0PaoJ0E+S43k8knrUMCyQEoGZoz0BPSspPnWu5egt9brd/64c9mHaueuIHt5SjgYPQ+tdSXd2zIcnHXHNVryKCaPa43senbFVTm46Mlq5zON3T5qk+ztkDcvQfdq3HYn7Q6Iy4UbiWOPw96tRKsIyZfmxj5Bmt3UXQqNO+5QjgCZyqt7seaVbQyAlVJ9h/jWgNiN8sQJPdjTZJZNrDdtPYAVHOzXkRQ+zKTlWX6E5q7YDyJ+C2x+DnoPSgouxvlHftTTGobhcfQYpuV1Yz5UbgcFAu0ZHfuaaZFBzwDnpVaJzLb7scoQG7VIrrldy5X0B7Vz2EOlcl/usWPJyRj9KbCvmuQwAwvAFOdyFBU4wTggc1JZQyM+7dGdyjjzBnr6ZpdCluNNrCzfPGG+4T2PXmtQeGrUID9pkKyAEAAEqP65qver9kj80lnGVBAQqQAc5rpNJnjnsYmUjHlJwwxjiim2wqOyVjJOgW0fKQNMB/eJp62UiNlbVV/wBork/n7VfmtZJAwlu1Cso/iJx6/nVuBFtwIgzOxxyVOOABWtjHnfU80IGGOPXtUeMH/wCtSmZDCzjJXOOnNNLIse/JwT6c1VmbNokjmWNSCCGZgParQYZAGeg61lz/AHCR/eBFaELb4Y23AnjI9KUl1F1J41kkICKzfQZqzaWzRMz3VvIsYCsGdcLkHoeOB71BFqb20Hk+WSOoI7kdOa0rLUzqENwLoRRsQPLznrg8k1jJyXTQdirdzxw27NatJJI75/dbtiD0z3/KtXQ1cwiYSodwDMDjCj0qGTULbS7aMRN5+5sPtbnnuKb9rhmhnuJPkdk+QsCOPr+VKMuthyTatc3ruVvKhQSIiyMQzrkcDnA9D2p0DMJmWMuYeMDBIVvTnnpiqOlx3F5aqt20hCjk/wB/0/IVrCOC3jVdqIBwBj+lbGLaUbHkb3O1pBGg28Y3DoR3qJLmQQlflOc9RyP85qS6jMc5bPDcEVWVcbxnocV1pRaTM5OSbRbZi0GWxkMBxV62LCLIPyjG4elUpV22p9dwNWLd92MnnjNYT12N4+Zb3BgAOvOea3NKvbS2tPLYpuLZyep461ggYx6YNTWSRyvKXUEogI9jmsJJNamljU1ea0urBsbBMhBBAA71Bplz50TxSzSb1GV/eEDGOg+lUpLCNbuFM5VyufUZNa9vZW8JkaNSW5UZOeMVGkY2RVu5djmmt3UJLIy8gKznGfXinG6uvnZZ/L6gBEHH4nJqM/6xfxzTXdVRwTgjP8qz55bByxetjkLpBJEwOMg5FUlTJB/vbTxWisQJ6An3qVIBjgY+ldqqcqsZOPM7lG5DyIwVGPINNhLIwLq6/VTWtHBn1P1FaFppk1y2yFA7jkqo6fWo9p0sVy9WYQmQrgOvfvVmCRIsskmGIGd2QMdRWqdPBYxujFwcFduSPwqtNoc+47h5anA+7g46DIqU0+g27dTPmu2E8e1i7oVwTjHHPaum0/VWNpKUgTzAdysWI2+vI6/SubOl3bzHahAGBliByB15rXtLG4trV42kRi/XC5xkUpTUUnF6hy82kkWoxM108txMZZZOp9gOB+tSu+In9s1Bsm+U7UIAIxkj+lNcssciBCC2cAc1zN3d2apW0RlLCxGRitbSdDa/V386OPYeVIJP1+lRrGAuMEHsTW5YSxWsSTpCR0Bb+J1798H14x9K6aS53qYVW4rQfbaFaRjJllnHXCDav5//AF6vGNViEccaRIh+6vc+/Y1OA8RxF+8iPzbSeoPp6UsbxkMYQZHBAKZAK/UV08qXwnI5OW5SkeU3SW58wRGMORCoXPJGMfhSXNolymy2YIsR4QqRuPqT6/WrcpmLhTEZHYdBwi/U96cISy5mZSB1VeEH+NDXMrME7O6OelgmiOCgDdt/3W+hHUfSmSB5JIz9mji25LFW3Z9APQdfet66vYoYD+6aaPkfc+Q+wGOfwrESdZ1Mke1QRwingfnXHVg6S0e51QlzvVbBGIll/wBIbYhHBZioB9z/APWqFZorhnNsJBGD8pkHX6HAzU+0gAnGT1FKc88Nz6Vhzrl5bGqWt7mcMqpyMH1H/wBerels0ttdhrZHjQ9RDhjgd3B6/hxWBp04nV3Z2QY+fJ7jr+FXLS4uBIskM8ksCnIgZ2Rf0/Ouqn+7k7mUn7WCaOkhu7i3XymMkigbl8uMOcHnv2wfT1pyTm7cAeYJxyivMqt+AUfpWZb+IJoIUgZVg2jAZ1LA/wDAs4/Ordvcx6q+xdSSWVTzFt2/iMHn6g12Jp6o5nFrc0nubq3jIuhbjP3XLkD8R3/Cqxiu7g+YyrIq84dwF/BccfjVP+1NOjvJIXXdcJ8plWU8n0yef50k8stnCbmT7K0Gfv7Ac+y8At+dArExvC6jyopFmUgiRzvUf8BGPeqNs0sgeWc7pHOCSAM49h0qCfUVniX+z5g1yzDcr2wGFx6nI6/zosYzbRFZZCzMckYwB9K5MTJNWR00YNasnurgW6BjEzZOMKfz/ShbmJyFilBJXdz6df6isnWZ0lRRDO7KRtcRsGA9yp/nWUbqaSdA2P36AfKuAvYj8gP1rKFDmjcUqzjLTVGUjAqxYnPqK17O8cMgEoxgEhjjJ/z61z4cgVNDIXZh0yK9CcOZanHCXK7nWJfiQLvUhe3HFSZt3+YRqSOhUDNY1rMfJGOD7ACpd5LZwM+vQ1xOnZ6Hoxk3HU1o1gSMqigA9iuc0gWNcEITt+6u4kD6A8Cs4TSL0fP+9zSNdMCFYZyaXI+5d0a63Ld2xQZpT3B+lZguX/hO0YxiomYliw4b1zj+VL2YXINTZ1nwVEY5+ZT/AJxnvVAzlZkkxyo6Z4Bqa9WZnLecSuOhrLMjMfQjjiu6nH3TzaytLQ//2Q==')">
+          <div class="frame-full" data-full="assets/scene_scare.jpg"></div>
+          <div class="spot" style="left:52%;top:40%" onclick="useScareFlavor()">稻草人</div>
+          <div class="spot clue" style="left:28%;top:75%" onclick="usePlane()">纸飞机·纸堆</div>
+        </div>
+      </div>
+      <!-- 场景3：奶茶（1106） -->
+      <div class="layer" id="L_tea">
+        <div class="frame" style="background-image:url('data:image/jpeg;base64,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')">
+          <div class="frame-full" data-full="assets/scene_tea.jpg"></div>
+          <div class="spot clue" style="left:50%;top:48%" onclick="useTea()">周董特调奶茶</div>
+        </div>
+      </div>
+      <!-- 场景4：反方向的钟 + 保险箱 -->
+      <div class="layer" id="L_vault">
+        <div class="frame" style="background-image:url('data:image/jpeg;base64,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')">
+          <div class="frame-full" data-full="assets/scene_vault.jpg"></div>
+          <div class="spot clue" style="left:55%;top:25%" onclick="useClock()">反方向的钟</div>
+          <div class="spot clue" style="left:42%;top:62%" onclick="openKeypad()">挂锁·保险箱</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="npcbar">
+      <div class="face">🧑‍🌾</div>
+      <div class="line" id="npc">哟，来啦？老板落了个东西。今天片场有规矩：<b>别碰黑钢琴</b>（《夜曲》剧组的），<b>也别管湿雨伞</b>（没下过雨）。顺着《稻香》的歌词找——记住《反方向的钟》，<b>往回走才看得清</b>。</div>
+    </div>
+
+    <div class="tabs">
+      <button class="on" id="tab_farm" onclick="setScene('farm')"><span class="ic">🏚️</span>农舍</button>
+      <button id="tab_scare" onclick="setScene('scare')"><span class="ic">🌾</span>稻草人</button>
+      <button id="tab_tea" onclick="setScene('tea')"><span class="ic">🧋</span>窗台</button>
+      <button id="tab_vault" onclick="setScene('vault')"><span class="ic">🕰️</span>暗格</button>
+    </div>
+
+    <div class="modal" id="itemModal"><div class="mbox" id="itemBox"></div></div>
+
+    <div class="modal" id="clockModal">
+      <div class="mbox" style="background:#1a140c;color:var(--txt)">
+        <h3 style="color:var(--straw)">🕰️ 反方向的钟</h3>
+        <p class="note" style="color:var(--sub)">钟面刻字：「穿梭时间的画面的钟，从反方向开始移动」。
+          这台钟的指针全部<b style="color:var(--red)">逆时针倒走</b>。</p>
+        <div class="uv">🔦 紫外灯亮起，浮出荧光字：<br>「把 <b>0118</b> 顺着这台钟的方向读——就像<b>时间倒流</b>。」</div>
+        <p class="note" style="color:var(--sub)">把 0118 <b>倒序</b>读，会是什么？把它输进保险箱挂锁。</p>
+        <button class="mbtn" onclick="closeModal('clockModal');openKeypad()">把密码输进保险箱 →</button>
+      </div>
+    </div>
+
+    <div class="modal" id="kpModal">
+      <div class="mbox woodbox">
+        <h3 id="kpTitle">🔒 四位挂锁</h3>
+        <p class="note" id="kpHint">密码的钥匙在「<b>开始</b>」的日子。</p>
+        <div class="kp-disp" id="kpDisp"></div>
+        <div class="dial-wrap">
+          <div class="dial" id="dialWheel"></div>
+          <div class="dial-stop"></div>
+          <div class="hub">拨号</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="mbtn" style="background:#8a7a5a;flex:1;margin-top:0" onclick="kpDelete()">← 删除</button>
+          <button class="mbtn" style="background:#b0a079;flex:1;margin-top:0" onclick="closeModal('kpModal')">退出</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="finale">
+    <div class="fwrap" id="fwrap">
+      <!-- 过场：依次闪过后整体淡出 -->
+      <div class="cine" id="cine">
+        <div class="success" id="f_success">🔓 8110 · 逃脱成功！</div>
+        <div class="skid" id="f_skid">…………　吱———！！</div>
+        <div class="ayo" id="f_ayo">哎—哟—不—错—哦！</div>
+        <div class="albumcard" id="f_cover"><div class="t">哎哟<br>不错哦</div></div>
+        <div class="albumcap" id="f_cap">墙板裂开 ·《哎哟不错哦》专辑封面投影</div>
+        <div class="chorus" id="f_chorus">🎵「笑一个吧～功成名就不是目的～<br>回家吧～回到最初的美好～」</div>
+        <div class="mono" id="f_mono">"哎……别忘了哦，让自己快乐快乐，这才叫做意义……"</div>
+      </div>
+      <!-- 定格：浅绿色彩蛋揭晓页（刚好一屏，不滚动） -->
+      <div class="ending" id="ending">
+        <div class="ehead">
+          <span class="nav" onclick="restart()">‹</span>
+          <span class="etitle">隐藏彩蛋</span>
+          <span class="nav" onclick="alert('Demo：分享这张黑胶 B 面')">⤴</span>
+        </div>
+        <div class="epill">● 解锁黑胶 B 面</div>
+        <div class="vinyl-stage" id="f_vstage" style="opacity:1">
+          <div class="vinyl" id="f_vinyl"><div class="lbl" id="f_vlbl">B面</div><div class="vcover" id="fVinylCover"><span class="btag">B面</span></div></div>
+        </div>
+        <div class="qcard"><span class="qmark">“</span>让自己快乐快乐，<br>这才叫做意义。</div>
+        <div class="enpc">
+          <span class="eav">🧑‍🌾</span>
+          <div class="ebub">哎哟，不错哦！你真的把老板的「初心」找回来了。这张黑胶里藏的，是他写给所有迷路的人的一句话。</div>
+        </div>
+        <div class="espacer"></div>
+        <div class="ebtns">
+          <button class="gbtn" onclick="nextLevel()">下一关 →</button>
+          <button class="gbtn ghost" onclick="showRewards()">🔖 查看成长</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 通关奖励：经验值结算 -->
+    <div class="modal" id="rewardModal">
+      <div class="mbox" style="text-align:center">
+        <div class="lvlclear">LEVEL CLEARED</div>
+        <h3 style="text-align:center;margin:5px 0 2px;font-size:21px">闯关成功！</h3>
+        <div class="note" style="margin:0 0 12px;text-align:center">通关《遗失的母带》· 连胜 +1</div>
+        <div class="ucard">
+          <div class="uhead"><span>本关奖励</span><span class="ux">EXP</span></div>
+          <div class="uicon">✨</div>
+          <div class="ugenre">+250 经验</div>
+          <div class="usub">周杰伦喜欢值 · 离 Lv.5 更近一步</div>
+        </div>
+        <p class="udesc">喜欢值已计入周杰伦，<br>升到 Lv.5 即可解锁专属勋章。</p>
+        <button class="gbtn" style="margin-top:4px" onclick="closeModal('rewardModal');go('cleared')">查看成长</button>
+        <button class="gbtn ghost" style="margin-top:8px" onclick="closeModal('rewardModal')">稍后再说</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 闯关成功 -->
+  <section class="screen" id="cleared">
+    <span class="cl-share" onclick="shareBrag()">⤴</span>
+    <div class="cl-cleared">LEVEL CLEARED</div>
+    <div class="cl-title">恭喜你成功逃脱</div>
+    <div class="cl-meta">解开全部 5 个谜题 · 用时 04:12 · 连胜 +1</div>
+    <div class="exp-medal">+250<span class="em-u">喜欢值</span></div>
+    <div class="exp-cap">本次通关 · 周杰伦喜欢值</div>
+    <div class="grow-card">
+      <div class="grow-row" style="margin-bottom:4px">
+        <div class="gr-top"><span>🥤 周杰伦 · 喜欢值</span><span class="gr-lv orange">Lv.4</span></div>
+        <div class="gr-bar orange"><i style="width:78%"></i></div>
+        <div class="gr-sub">再通关 <b>1 次</b> 即可升 Lv.5，解锁周杰伦专属勋章</div>
+      </div>
+    </div>
+    <div class="cl-btns">
+      <button class="gbtn" onclick="go('usecard')">查看成长详情</button>
+      <button class="gbtn ghost" onclick="go('home')">返回首页</button>
+    </div>
+  </section>
+
+  <!-- 03 本关成长（账号EXP + 歌手喜欢值结算） -->
+  <section class="screen" id="usecard">
+    <div class="hbar">
+      <span class="nav" onclick="go('cleared')">‹</span>
+      <span class="htitle">本关成长</span>
+      <span class="nav"></span>
+    </div>
+    <div class="uc-body">
+      <div class="growx-hero">
+        <div class="gx-exp">+250 <span>喜欢值</span></div>
+        <div class="gx-cap">通关《遗失的母带 · 稻香》· 关联歌手 周杰伦</div>
+      </div>
+      <div class="sec-label">歌手喜欢值</div>
+      <div class="singer-box">
+        <div class="singer-head">
+          <div class="sav">周</div>
+          <div><div class="snm">周杰伦</div><div class="ssub">本关关联歌手 · 自动 +喜欢值</div></div>
+          <div class="schg" style="color:#e07a3a;font-weight:800">Lv.4</div>
+        </div>
+        <div class="lv-row">
+          <span class="lv-tag">Lv.4</span>
+          <span class="lv-bar"><i id="lvFill"></i></span>
+          <span class="lv-tag">Lv.5</span>
+        </div>
+        <div class="lv-note">升到 <b>Lv.5</b> 解锁周杰伦专属勋章</div>
+      </div>
+      <div class="unlock-box">
+        <div class="ub-top">🔒 升至 Lv.5 解锁专属勋章</div>
+        <div class="unlock-badge">
+          <div class="bg">🧋</div>
+          <div><div class="bn">周杰伦 · 奶茶勋章</div><div class="bd">解锁后可佩戴在你的个人主页头像与昵称旁</div></div>
+        </div>
+      </div>
+      <div class="uc-tip">💡 经验自动累积、无需手动使用道具；升满即时生效。</div>
+    </div>
+    <div class="foot-btn">
+      <button class="gbtn" onclick="confirmUpgrade()">领取成长 · 查看主页</button>
+    </div>
+  </section>
+
+  <!-- 04 个人主页 -->
+  <section class="screen" id="profile">
+    <div class="pf-search">
+      <span class="ps-ic">♪</span>
+      <span class="ps-t">听我想听</span>
+      <span class="ps-r">☰</span>
+    </div>
+    <div class="pf-body">
+      <div class="pf-user">
+        <div class="pav"><span class="wear">🧋</span></div>
+        <div>
+          <div class="pnm">Sapphire <span class="pbadge">🧋 周杰伦·奶茶</span></div>
+        </div>
+        <div class="pv"><div class="coin">88 <span class="y">V</span></div><div class="cash">领现金 ›</div></div>
+      </div>
+      <div class="pf-vip">
+        <span class="vtag">VIP</span><span class="vren">续费 ¥15</span><span class="vbd">★ 3 勋章</span>
+      </div>
+      <div class="pf-member">
+        <span class="mc">会员中心 ›</span><span class="msub">首购价 · 15 元开超会</span>
+        <span class="micons">
+          <span class="mi"><span class="ii">🎨</span>装扮</span>
+          <span class="mi"><span class="ii">📅</span>日签</span>
+          <span class="mi"><span class="ii">👤</span>关注</span>
+        </span>
+      </div>
+      <div class="pf-nums">
+        <div class="n"><div class="nv">290</div><div class="nk">收藏</div></div>
+        <div class="n"><div class="nv">137</div><div class="nk">本地 / 历史</div></div>
+        <div class="n"><div class="nv">4</div><div class="nk">有声</div></div>
+        <div class="n"><div class="nv">7</div><div class="nk">已购</div></div>
+      </div>
+      <div class="pf-badges">
+        <div class="bh"><span class="bt">我的勋章</span><span class="ba">全部 3 ›</span></div>
+        <div class="badge-grid">
+          <div class="badge-item b-milk" id="badgeMilk"><div class="bi">🧋</div><div class="bn">周杰伦·奶茶</div><div class="bs on">佩戴中</div></div>
+          <div class="badge-item b-star"><div class="bi">⭐</div><div class="bn">周深·星河</div><div class="bs lock">Lv.5 解锁</div></div>
+          <div class="badge-item b-vinyl"><div class="bi">💿</div><div class="bn">Eason·黑胶</div><div class="bs lock">Lv.5 解锁</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="tabbar">
+      <div class="tb" onclick="go('home')"><span class="tbi">🏠</span>首页</div>
+      <div class="tb"><span class="tbi">📺</span>视频</div>
+      <div class="tb"><span class="tbi">◎</span>刷歌</div>
+      <div class="tb"><span class="tbi">☆</span>星光</div>
+      <div class="tb on"><span class="tbi">👤</span>我的</div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+function fit(){const s=Math.min(window.innerWidth/393,window.innerHeight/852);
+  document.getElementById('app').style.transform='scale('+s+')';}
+window.addEventListener('resize',fit);fit();
+
+/* 无障碍：让所有 onclick 的非按钮元素支持键盘操作（Tab 聚焦 + Enter/空格触发） */
+function a11yKeyable(el){
+  var tag=el.tagName.toLowerCase();
+  if(tag==='button'||tag==='a') return;
+  if(!el.hasAttribute('role')) el.setAttribute('role','button');
+  if(!el.hasAttribute('tabindex')) el.setAttribute('tabindex','0');
+  el.addEventListener('keydown',function(e){
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click();}
+  });
+}
+document.querySelectorAll('[onclick]').forEach(a11yKeyable);
+
+/* 背景音乐：循环播放（从首次点击「推开农舍木门」开始，规避自动播放限制） */
+const bgm=document.getElementById('bgm');
+function startBgm(){ if(bgm && bgm.paused){ bgm.volume=0.5; bgm.play().then(()=>{document.getElementById('bgmBtn').textContent='🔊';}).catch(()=>{}); } }
+function toggleBgm(){ if(!bgm)return;
+  if(bgm.paused){ bgm.volume=0.5; bgm.play().catch(()=>{}); document.getElementById('bgmBtn').textContent='🔊'; }
+  else { bgm.pause(); document.getElementById('bgmBtn').textContent='🔈'; } }
+/* 兜底：首次任意点击/触摸都尝试开始播放（规避自动播放限制） */
+['click','touchstart','keydown'].forEach(ev=>document.addEventListener(ev,function _o(){startBgm();},{once:true}));
+
+const state={poster:false,plane:false,tea:false,lockStage:0};
+const titles={farm:'序幕 · 稻香农场',scare:'第一幕 · 稻草人',tea:'第二幕 · 窗台奶茶',vault:'第三幕 · 反方向的钟'};
+
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');}
+function setScene(name){
+  ['farm','scare','tea','vault'].forEach(n=>{
+    document.getElementById('L_'+n).classList.toggle('active',n===name);
+    document.getElementById('tab_'+n).classList.toggle('on',n===name);
+  });
+  document.getElementById('sceneTitle').textContent=titles[name];
+  loadFullScene(name);
+}
+function loadFullScene(name){
+  var layer=document.getElementById('L_'+name); if(!layer) return;
+  var ff=layer.querySelector('.frame-full'); if(!ff || ff.dataset.loaded) return;
+  var url=ff.getAttribute('data-full');
+  var img=new Image();
+  img.onload=function(){ ff.style.backgroundImage="url('"+url+"')"; ff.classList.add('loaded'); ff.dataset.loaded='1'; };
+  img.src=url;
+}
+function npcSay(html){document.getElementById('npc').innerHTML=html;}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+function showItem(html){document.getElementById('itemBox').innerHTML=html;
+  document.getElementById('itemModal').classList.add('show');}
+
+function useDistract(w){
+  if(w==='piano') npcSay('诶——<b>说了别碰那架黑钢琴</b>，那是《夜曲》剧组的，跟咱《稻香》没关系。');
+  else npcSay('那把<b>湿雨伞</b>？大晴天的，纯属干扰，别管它。');
+}
+
+function usePoster(){
+  state.poster=true;
+  showItem(`<h3>📜 《稻香》歌词手抄报</h3><div class="obj">📜</div>
+    <p class="note">墙上两句被红笔圈出：</p>
+    <div class="lyric"><span class="mark">「童年的纸飞机，现在终于飞回我手里」</span></div>
+    <div class="lyric"><span class="mark">「我靠着稻草人，吹着风，唱着歌，睡着了」</span></div>
+    <p class="note">线索指向<b>稻草人</b>和那架<b>纸飞机</b>。去下面「稻草人」场景看看。</p>
+    <button class="mbtn" onclick="closeModal('itemModal');setTimeout(function(){setScene('scare')},250)">知道了 · 去稻草人 →</button>`);
+  npcSay('对喽，<b>顺着歌词找</b>。纸飞机、稻草人……还有窗台上那杯奶茶，都在歌里写着呢。');
+}
+
+function useScareFlavor(){npcSay('「我靠着稻草人，吹着风，唱着歌，睡着了」——脚边的纸堆里，找找那架<b>纸飞机</b>。');}
+function usePlane(){
+  if(!state.poster){npcSay('先回农舍看看墙上的<b>歌词手抄报</b>，照着歌词找才不会乱。');return;}
+  if(state.plane){npcSay('纸飞机上的<b>责任码 0118</b> 你已经记下了。');return;}
+  state.plane=true;
+  document.getElementById('inv_plane').style.display='inline';
+  showItem(`<h3>✈️ 草帽后的纸飞机</h3><div class="obj">✈️</div>
+    <p class="note">🎵《稻香》Rap：「童年的纸飞机现在终于飞回我手里……」</p>
+    <p class="note">机翼内侧用铅笔写着：</p><div class="codebig">0118</div>
+    <p class="note">背面小字：「家是唯一的城堡——<b>糖度看我出生的月</b>」。</p>
+    <button class="mbtn" onclick="closeModal('itemModal');setTimeout(function(){setScene('tea')},250)">收好 0118 · 去窗台 →</button>`);
+  npcSay('老板管这叫<b>「责任码」</b>，说要对自己负责。他还写过一首歌说<b>时间是倒着走的</b>，你琢磨琢磨？');
+}
+
+function useTea(){
+  if(!state.poster){npcSay('先回农舍看墙上的<b>歌词手抄报</b>嘛。');return;}
+  if(state.tea){npcSay('奶茶杯套上的<b>开始之日 1106</b> 你记下了。钥匙在「开始」的日子。');return;}
+  state.tea=true;
+  document.getElementById('inv_tea').style.display='inline';
+  showItem(`<h3>🧋 周董特调 · 半糖珍珠奶茶</h3><div class="obj">🧋</div>
+    <p class="note">杯身印着《简单爱》歌词：<b>「微微笑看你说你想我知道」</b></p>
+    <p class="note">杯套（乐谱纸）写着：</p>
+    <div class="lyric">• 糖度：Jay 出生的「月」→ <b>01</b><br>• 冰量：Jay 出道的「月日」→ <b>1106</b><br>
+      • 备注：全糖会胖，<b>半糖刚刚好</b>；钥匙在「<b>开始</b>」的日子。</div>
+    <button class="mbtn" onclick="closeModal('itemModal');setTimeout(function(){setScene('vault')},250)">收好 1106 · 去暗格 →</button>`);
+  npcSay('喂喂！那杯<b>半糖</b>的！全糖会变胖，只有笨蛋才喝全糖～记住：<b>密码在「开始」的日子，但答案藏在「倒流的时间」里</b>。');
+}
+
+function useClock(){document.getElementById('clockModal').classList.add('show');}
+
+let kpCode='', dialBusy=false;
+const DIAL_ANG={1:30,2:60,3:90,4:120,5:150,6:180,7:210,8:240,9:270,0:300};
+const DIAL_STOP=150; // 指针(finger stop)角度，holes转到这里
+function buildDial(){
+  const w=document.getElementById('dialWheel'); if(!w)return;
+  w.innerHTML=''; w.style.transition='none'; w.style.transform='rotate(0deg)';
+  const R=86,c=116;
+  for(let d=0;d<=9;d++){
+    const th=DIAL_ANG[d]*Math.PI/180;
+    const x=c+R*Math.sin(th), y=c-R*Math.cos(th);
+    const el=document.createElement('div'); el.className='hole'; el.textContent=d;
+    el.style.left=x+'px'; el.style.top=y+'px';
+    el.onclick=()=>dialDigit(d);
+    el.setAttribute('role','button'); el.setAttribute('tabindex','0'); el.setAttribute('aria-label','拨号 '+d);
+    el.onkeydown=(e)=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();dialDigit(d);} };
+    w.appendChild(el);
+  }
+}
+function dialDigit(d){
+  if(dialBusy || kpCode.length>=4) return;
+  dialBusy=true;
+  const w=document.getElementById('dialWheel');
+  const delta=(DIAL_STOP-DIAL_ANG[d]+360)%360;
+  w.style.transition='transform .55s cubic-bezier(.2,.75,.25,1)';
+  w.style.transform='rotate('+delta+'deg)';
+  setTimeout(()=>{
+    kpCode+=String(d); renderKp();
+    w.style.transition='transform .42s ease-in';
+    w.style.transform='rotate(0deg)';
+    setTimeout(()=>{ dialBusy=false; if(kpCode.length>=4) kpSubmit(); }, 440);
+  }, 580);
+}
+function openKeypad(){
+  kpCode='';dialBusy=false;renderKp();buildDial();
+  if(state.lockStage===0){document.getElementById('kpTitle').innerHTML='🔒 保险箱·拨号锁';
+    document.getElementById('kpHint').innerHTML='转动拨号盘输入四位，<b>满四位自动开锁</b>。钥匙在「<b>开始</b>」的日子。';}
+  else{document.getElementById('kpTitle').innerHTML='🔒 重新拨号';
+    document.getElementById('kpHint').innerHTML='把责任码 <b>0118</b> 顺着<b>反方向的钟</b>读——时间倒流。';}
+  document.getElementById('kpModal').classList.add('show');
+}
+function renderKp(){document.getElementById('kpDisp').textContent=kpCode.padEnd(4,'·');}
+function kpClear(){kpCode='';dialBusy=false;renderKp();buildDial();}
+function kpDelete(){ if(dialBusy)return; kpCode=kpCode.slice(0,-1); renderKp(); }
+function kpSubmit(){
+  if(kpCode.length<4)return;
+  const c=kpCode;
+  if(state.lockStage===0){
+    if(c==='1106'){state.lockStage=1;closeModal('kpModal');
+      npcSay('「咔哒」箱子开了，红布滑落——里面不是出口，是一面<b>镜子</b>和一台<b>反方向的钟</b>。点那台钟看看。');
+      setTimeout(()=>document.getElementById('clockModal').classList.add('show'),300);}
+    else if(c==='8110'){flashHint('方向是对了，但还没到时候——先用「<b>开始的日子</b>」打开箱子。');}
+    else{flashHint('纹丝不动。钥匙在「<b>开始</b>」的日子（出道月日）。');}
+  }else{
+    if(c==='8110'){closeModal('kpModal');runFinale();}
+    else if(c==='1106'){flashHint('箱子已经开过了——现在要<b>顺着反方向的钟</b>读 0118。');}
+    else if(c==='0118'){flashHint('正着读不行……这台钟<b>倒着走</b>，把它反过来。');}
+    else{flashHint('不对。把 0118 <b>倒序</b>读读看。');}
+  }
+  kpClear();
+}
+function flashHint(html){document.getElementById('kpHint').innerHTML='❌ '+html;}
+
+function runFinale(){
+  go('finale');const F=document.getElementById('finale');
+  // 复位
+  ['f_success','f_skid','f_ayo','f_cover','f_cap','f_chorus','f_mono'].forEach(i=>document.getElementById(i).classList.remove('show1'));
+  document.getElementById('cine').classList.remove('hide');
+  document.getElementById('ending').classList.remove('show1');
+  const v=document.getElementById('f_vinyl');v.style.transform='translateY(26px)';
+  document.querySelectorAll('.grain').forEach(g=>g.remove());F.classList.remove('red');
+  // 过场：声音→哎哟不错哦→专辑封面→字幕
+  setTimeout(()=>document.getElementById('f_success').classList.add('show1'),150);
+  setTimeout(()=>document.getElementById('f_skid').classList.add('show1'),900);
+  setTimeout(()=>document.getElementById('f_ayo').classList.add('show1'),1500);
+  setTimeout(()=>{F.classList.add('red');document.getElementById('f_cover').classList.add('show1');
+    document.getElementById('f_cap').classList.add('show1');rainGrain();},2400);
+  setTimeout(()=>document.getElementById('f_chorus').classList.add('show1'),3700);
+  setTimeout(()=>document.getElementById('f_mono').classList.add('show1'),4800);
+  // 过场淡出 → 定格一屏
+  setTimeout(()=>document.getElementById('cine').classList.add('hide'),6200);
+  setTimeout(()=>{document.getElementById('ending').classList.add('show1');v.style.transform='translateY(0)';},6800);
+}
+function showRewards(){go('cleared');}
+function nextLevel(){alert('Demo：下一关《七里香》即将解锁～');}
+function rainGrain(){const wrap=document.getElementById('fwrap');
+  for(let i=0;i<26;i++){const g=document.createElement('div');g.className='grain';g.textContent='🌾';
+    g.style.left=Math.random()*100+'%';g.style.fontSize=(10+Math.random()*16)+'px';
+    g.style.animationDuration=(2.5+Math.random()*3)+'s';g.style.animationDelay=(Math.random()*2)+'s';
+    wrap.appendChild(g);}
+}
+function restart(){
+  state.poster=false;state.plane=false;state.tea=false;state.lockStage=0;
+  document.getElementById('inv_plane').style.display='none';
+  document.getElementById('inv_tea').style.display='none';
+  npcSay('又来啦？规矩还是那句：别碰黑钢琴和湿雨伞，顺着《稻香》的歌词找。');
+  setScene('farm');go('home');
+}
+
+/* ===== 曲风大闯关：商业化流程 ===== */
+function shareBrag(){ alert('Demo：分享战绩 / 勋章到社交'); }
+function confirmUpgrade(){
+  var fill=document.getElementById('lvFill');
+  if(fill) fill.style.width='100%';           // 周杰伦喜欢值升满 → Lv.5，解锁勋章
+  setTimeout(function(){
+    go('profile');
+    var b=document.getElementById('badgeMilk');
+    if(b) b.classList.add('badge-pop');
+  }, 950);
+}
+
+/* ===== #9 接真实 QQ音乐搜索：加载本关曲目元数据 ===== */
+function fillSongMeta(m){
+  try{
+    if(!m || !m.song_name) return;
+    var box=document.getElementById('songMeta'); if(!box) return;
+    box.style.display='flex';
+    document.getElementById('smTitle').textContent = m.song_name + (m.singer_name ? ' · ' + m.singer_name : '');
+    var pic = m.album_pic;
+    var cov=document.getElementById('smCover');
+    if(pic){ cov.style.backgroundImage="url('"+pic+"')"; cov.textContent=''; }
+    document.getElementById('smTag').textContent =
+      (m.source==='qqmusic') ? '数据来自 QQ音乐 OpenAPI' : '内置数据（未接后端）';
+    // 主页 & 结局黑胶中心换成专辑封面
+    if(pic){
+      var hv=document.getElementById('homeVinylCover');
+      if(hv){ hv.style.backgroundImage="url('"+pic+"')"; hv.style.display='block'; }
+      var vc=document.getElementById('fVinylCover');
+      var vl=document.getElementById('f_vlbl');
+      if(vc){ vc.style.backgroundImage="url('"+pic+"')"; vc.style.display='block'; }
+      if(vl){ vl.style.display='none'; }
+    }
+  }catch(e){}
+}
+function fillSinger(m){
+  try{
+    if(!m || !m.singer_name) return;
+    var sav=document.getElementById('usSav');
+    if(sav && m.singer_pic){ sav.style.backgroundImage="url('"+m.singer_pic+"')"; sav.textContent=''; }
+    var snm=document.getElementById('usSnm'); if(snm) snm.textContent=m.singer_name;
+    var sub=document.getElementById('usSsub');
+    if(sub && (m.song_num||m.album_num)){
+      sub.textContent='你的喜欢等级 · '+(m.song_num||0)+' 首 / '+(m.album_num||0)+' 张专辑';
+    }
+  }catch(e){}
+}
+(function(){
+  fetch('/api/song?name=' + encodeURIComponent('稻香'))
+    .then(function(r){ return r.json(); })
+    .then(fillSongMeta)
+    .catch(function(){ /* file:// 直开或后端未起时静默，保留默认视觉 */ });
+  fetch('/api/singer?name=' + encodeURIComponent('周杰伦'))
+    .then(function(r){ return r.json(); })
+    .then(fillSinger)
+    .catch(function(){});
+})();
+</script>
+</body>
+</html>

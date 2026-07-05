@@ -1,0 +1,15 @@
+# 密钥 / 环境变量（含 QQ音乐 app_key，切勿提交）
+.env
+.env.local
+*.key
+*.pem
+# 注意：.env.example 是模板，不在忽略之列，可提交
+
+# 运行 / 缓存
+server.log
+__pycache__/
+*.pyc
+
+# 系统 / 工具文件
+.DS_Store
+.claude/

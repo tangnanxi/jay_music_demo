@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=393, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>青花瓷 · 檀香琴斋 · 风门BPM同步</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;user-select:none}
+  html,body{height:100%}
+  body{background:#0c0804;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  #app{width:393px;height:852px;position:relative;overflow:hidden;transform-origin:center;
+    /* 有真实场景图时改成 background-image:url('assets/qhc_scene1.jpg') */
+    background:
+      radial-gradient(120% 60% at 50% 12%, #f6ecd2 0%, #e6cfa0 32%, #b98b52 66%, #7c5a30 100%);
+    box-shadow:0 0 60px rgba(0,0,0,.85)}
+  .wood-floor{position:absolute;left:0;right:0;bottom:0;height:34%;
+    background:repeating-linear-gradient(180deg,#a9743c 0 16px,#9c6a35 16px 18px);opacity:.9}
+  .top{position:absolute;top:34px;left:0;right:0;text-align:center;z-index:6;padding:0 20px}
+  .top .t{font-size:17px;font-weight:900;color:#3a2a14;letter-spacing:2px}
+  .top .h{font-size:12px;color:#5a4526;margin-top:6px;line-height:1.6}
+  .top .h b{color:#1f7a4d}
+
+  /* 青光环 + 香炉 */
+  .glow{position:absolute;left:50%;top:52%;width:300px;height:300px;transform:translate(-50%,-50%);
+    border-radius:50%;background:radial-gradient(circle,rgba(120,230,170,.55),rgba(120,230,170,0) 62%);
+    opacity:0;transition:opacity .25s;z-index:2;pointer-events:none}
+  .burner{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);z-index:3;width:150px;text-align:center}
+  .censer{width:150px;height:120px;margin:0 auto;position:relative;
+    background:linear-gradient(160deg,#cdeadd,#a7d3bf 60%,#7fae97);
+    border-radius:50% 50% 46% 46%/60% 60% 40% 40%;
+    box-shadow:inset 0 6px 12px rgba(255,255,255,.5),0 10px 20px rgba(0,0,0,.3);border:2px solid #d9b45e}
+  .censer .lid{position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:120px;height:40px;
+    background:linear-gradient(160deg,#bfe3d3,#8fbfa8);border-radius:50% 50% 30% 30%;border:2px solid #d9b45e}
+  .censer .lid::after{content:"";position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+    width:16px;height:16px;border-radius:50%;background:#bfe3d3;border:2px solid #d9b45e}
+  .censer .vent{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);width:26px;height:34px;
+    background:#3a2a14;border-radius:4px;box-shadow:inset 0 0 6px #000;overflow:hidden;transition:width .1s}
+  .censer .vent i{position:absolute;inset:0;background:repeating-linear-gradient(90deg,#f0a03a 0 3px,#7c3a12 3px 6px);opacity:.9}
+  .censer .foot{position:absolute;bottom:-14px;width:12px;height:18px;background:#8fbfa8;border-radius:3px}
+  .censer .foot.l{left:24px}.censer .foot.r{right:24px}
+  /* 烟 */
+  .smoke{position:absolute;left:50%;top:26%;transform:translateX(-50%);z-index:2;pointer-events:none}
+  .smoke span{position:absolute;bottom:0;width:8px;height:8px;border-radius:50%;
+    background:rgba(255,255,255,.5);filter:blur(2px);animation:rise linear infinite}
+  @keyframes rise{0%{transform:translateY(0) translateX(0);opacity:0}
+    15%{opacity:.7}100%{transform:translateY(-150px) translateX(14px);opacity:0}}
+
+  /* 瓷胚（成功后解锁高亮） */
+  .porcelain{position:absolute;right:26px;top:46%;z-index:3;width:52px;text-align:center;opacity:.35;
+    transition:opacity .5s, filter .5s;filter:grayscale(.3)}
+  .porcelain .body{width:38px;height:56px;margin:0 auto;background:linear-gradient(160deg,#fff,#e8eef0);
+    border-radius:44% 44% 40% 40%/30% 30% 50% 50%;border:1px solid #cbd6d2;position:relative}
+  .porcelain .neck{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:16px;height:12px;
+    background:#fff;border:1px solid #cbd6d2;border-radius:4px}
+  .porcelain .cap{font-size:10px;color:#3a2a14;margin-top:4px}
+  .porcelain.on{opacity:1;filter:none;animation:pop .5s}
+  @keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+  /* BPM 表 */
+  .gauge{position:absolute;left:24px;right:24px;top:118px;z-index:6}
+  .gauge .lab{display:flex;justify-content:space-between;font-size:11px;color:#5a4526;margin-bottom:5px}
+  .gauge .bar{position:relative;height:14px;border-radius:8px;background:#00000022;overflow:hidden;
+    border:1px solid #ffffff55}
+  .gauge .band{position:absolute;top:0;bottom:0;left:44%;width:12%;background:rgba(60,180,120,.55)}
+  .gauge .needle{position:absolute;top:-4px;width:4px;height:22px;border-radius:3px;background:#c8102e;
+    transform:translateX(-50%);transition:left .05s linear;box-shadow:0 0 6px rgba(200,16,46,.6)}
+  .gauge .bpm{text-align:center;font-size:12px;color:#3a2a14;margin-top:6px;font-weight:800}
+  .gauge .bpm b{color:#1f7a4d}
+
+  /* 同步进度 */
+  .sync{position:absolute;left:24px;right:24px;top:186px;z-index:6;opacity:0;transition:opacity .2s}
+  .sync.show{opacity:1}
+  .sync .track{height:8px;border-radius:6px;background:#00000022;overflow:hidden;border:1px solid #ffffff55}
+  .sync .fill{height:100%;width:0;background:linear-gradient(90deg,#5fc07d,#3aa865);transition:width .1s linear}
+  .sync .cap{text-align:center;font-size:11px;color:#1f7a4d;margin-top:4px;font-weight:800}
+
+  /* 拉杆 */
+  .lever{position:absolute;left:24px;right:24px;bottom:70px;z-index:7}
+  .lever .rail{position:relative;height:20px;border-radius:12px;
+    background:linear-gradient(180deg,#7a5226,#5a3a1c);box-shadow:inset 0 2px 5px rgba(0,0,0,.5)}
+  .lever .knob{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;
+    border-radius:50%;background:radial-gradient(circle at 40% 34%,#f0d79a,#c69a4a 78%,#8a6322);
+    border:2px solid #d9b45e;box-shadow:0 4px 10px rgba(0,0,0,.5);cursor:grab;touch-action:none}
+  .lever .knob:active{cursor:grabbing}
+  .lever .ends{display:flex;justify-content:space-between;font-size:12px;color:#3a2a14;margin-top:8px;font-weight:700}
+  .tip{position:absolute;left:0;right:0;bottom:30px;text-align:center;font-size:11px;color:#5a4526;z-index:6}
+
+  /* 成功层 */
+  .done{position:absolute;inset:0;z-index:20;display:none;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:30px;background:radial-gradient(circle at 50% 40%,rgba(120,230,170,.35),rgba(20,40,30,.85));
+    color:#eafff2}
+  .done.show{display:flex;animation:fade .5s}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .done .big{font-size:24px;font-weight:900;letter-spacing:2px;color:#c9ffe0;text-shadow:0 0 16px rgba(120,230,170,.8)}
+  .done .sub{font-size:13px;margin-top:10px;line-height:1.8;color:#d6f5e4}
+  .done .btn{margin-top:26px;background:#5fc07d;color:#08301c;border:none;border-radius:24px;padding:13px 30px;
+    font-size:15px;font-weight:800;letter-spacing:1px;cursor:pointer}
+  .flash{position:absolute;left:0;right:0;top:224px;text-align:center;font-size:12px;color:#c8102e;z-index:6;
+    opacity:0;transition:opacity .2s;font-weight:700}
+  .flash.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="wood-floor"></div>
+
+  <div class="top">
+    <div class="t">檀香琴斋 · 风门同步</div>
+    <div class="h">背景乐忽快忽慢。拖动<b>风门拉杆</b>调节檀香燃速，让曲速落进<b>青色区间</b>并<b>稳住 2 秒</b>。</div>
+  </div>
+
+  <div class="gauge">
+    <div class="lab"><span>慢</span><span>原版曲速</span><span>快</span></div>
+    <div class="bar"><div class="band"></div><div class="needle" id="needle" style="left:50%"></div></div>
+    <div class="bpm">当前 <span id="bpmNow">--</span> · 目标 <b id="bpmTarget">72</b> BPM</div>
+  </div>
+
+  <div class="sync" id="sync">
+    <div class="track"><div class="fill" id="syncFill"></div></div>
+    <div class="cap" id="syncCap">同步中…</div>
+  </div>
+  <div class="flash" id="flash">青光熄灭，重新稳住拉杆</div>
+
+  <div class="glow" id="glow"></div>
+  <div class="smoke" id="smoke"></div>
+  <div class="burner">
+    <div class="censer">
+      <div class="lid"></div>
+      <div class="vent" id="vent"><i></i></div>
+      <div class="foot l"></div><div class="foot r"></div>
+    </div>
+  </div>
+
+  <div class="porcelain" id="porcelain">
+    <div class="neck"></div><div class="body"></div>
+    <div class="cap">空白瓷胚</div>
+  </div>
+
+  <div class="lever">
+    <div class="rail" id="rail">
+      <div class="knob" id="knob"></div>
+    </div>
+    <div class="ends"><span>← 风门收窄 · 降速</span><span>开大 · 加速 →</span></div>
+  </div>
+  <div class="tip">按住铜色拉杆左右滑动</div>
+
+  <div class="done" id="done">
+    <div class="big">檀香同步 · 青光泛起</div>
+    <div class="sub">曲速归位，香炉通体青光。<br>桌上空白瓷胚已解锁，其余机关开放。</div>
+    <button class="btn" onclick="alert('下一题：瓷胚水墨调色（待做）')">进入下一题 →</button>
+  </div>
+
+  <!-- 《青花瓷》音频 -->
+  <audio id="bgm" src="assets/bgm2.mp3" loop preload="auto"></audio>
+</div>
+
+<script>
+function fit(){var s=Math.min(innerWidth/393,innerHeight/852);document.getElementById('app').style.transform='scale('+s+')';}
+addEventListener('resize',fit);fit();
+
+var BASE_BPM=72;                 // 原版前奏基准
+var RATE_MIN=0.6, RATE_MAX=1.4;  // 拉杆两端对应曲速
+var TARGET=1.0, BAND=0.05;       // 目标曲速与容差区间
+var HOLD_MS=2000;                // 需稳住的时长
+
+var app=document.getElementById('app'), rail=document.getElementById('rail'), knob=document.getElementById('knob');
+var needle=document.getElementById('needle'), vent=document.getElementById('vent'), glow=document.getElementById('glow');
+var syncBox=document.getElementById('sync'), syncFill=document.getElementById('syncFill'), syncCap=document.getElementById('syncCap');
+var flash=document.getElementById('flash'), porcelain=document.getElementById('porcelain'), done=document.getElementById('done');
+var bpmNow=document.getElementById('bpmNow'), bgm=document.getElementById('bgm');
+
+document.getElementById('bpmTarget').textContent=BASE_BPM;
+try{ bgm.preservesPitch=true; bgm.mozPreservesPitch=true; bgm.webkitPreservesPitch=true; }catch(e){}
+
+var pos=0.5;          // 拉杆位置 0..1（0.5=原速），初始随机会被覆盖
+var grabbing=false;   // 是否握住拉杆
+var solved=false;
+var holdMs=0, lastT=0;
+var wobbleT=0;
+
+// 首次交互启动音频（规避自动播放限制）
+function startAudio(){ if(bgm.paused){ bgm.volume=0.6; bgm.play().catch(function(){}); } }
+['pointerdown','touchstart','keydown'].forEach(function(ev){document.addEventListener(ev,function once(){startAudio();},{once:true});});
+
+function rateFromPos(p){ return RATE_MIN + p*(RATE_MAX-RATE_MIN); }
+function posFromRate(r){ return (r-RATE_MIN)/(RATE_MAX-RATE_MIN); }
+
+// 拖动拉杆
+function setPosFromX(clientX){
+  var r=rail.getBoundingClientRect();
+  var p=(clientX-r.left)/r.width;
+  pos=Math.max(0,Math.min(1,p));
+}
+knob.addEventListener('pointerdown',function(e){ e.preventDefault(); grabbing=true; startAudio(); knob.setPointerCapture(e.pointerId); });
+addEventListener('pointermove',function(e){ if(grabbing){ setPosFromX(e.clientX); } });
+addEventListener('pointerup',function(){ grabbing=false; });
+rail.addEventListener('pointerdown',function(e){ grabbing=true; startAudio(); setPosFromX(e.clientX); });
+
+function loop(t){
+  if(!lastT) lastT=t;
+  var dt=t-lastT; lastT=t;
+
+  var rate;
+  if(solved){
+    rate=TARGET;
+  } else if(grabbing){
+    rate=rateFromPos(pos);            // 握住时跟随拉杆
+  } else {
+    // 未握住：BPM 错乱，忽快忽慢
+    wobbleT+=dt;
+    pos=0.5 + 0.42*Math.sin(wobbleT/520) + 0.12*Math.sin(wobbleT/170);
+    pos=Math.max(0,Math.min(1,pos));
+    rate=rateFromPos(pos);
+  }
+
+  // 音频 & 视觉随 rate
+  try{ bgm.playbackRate=Math.max(0.5,Math.min(2,rate)); }catch(e){}
+  knob.style.left=(pos*100)+'%';
+  needle.style.left=(posFromRate(rate)*100)+'%';
+  vent.style.width=(14+pos*22)+'px';            // 风门开合
+  bpmNow.textContent=Math.round(BASE_BPM*rate);
+
+  // 烟速随 rate（rate 越大越急）
+  smokeSpeed(rate);
+
+  var inBand=Math.abs(rate-TARGET)<=BAND;
+  // 接近程度决定青光强度
+  var closeness=Math.max(0,1-Math.abs(rate-TARGET)/0.35);
+  glow.style.opacity = solved ? 1 : (closeness*0.9);
+
+  if(!solved){
+    if(inBand && grabbing){
+      holdMs+=dt;
+      syncBox.classList.add('show');
+      syncFill.style.width=Math.min(100,holdMs/HOLD_MS*100)+'%';
+      syncCap.textContent='青光凝聚中… '+Math.min(100,Math.round(holdMs/HOLD_MS*100))+'%';
+      flash.classList.remove('show');
+      if(holdMs>=HOLD_MS){ succeed(); }
+    } else {
+      if(holdMs>200 && !inBand){ flash.classList.add('show'); setTimeout(function(){flash.classList.remove('show');},900); }
+      holdMs=0; syncFill.style.width='0';
+      if(!grabbing) syncBox.classList.remove('show');
+      else syncCap.textContent='把曲速调进青色区间';
+    }
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+var smokeInited=false;
+function initSmoke(){
+  var s=document.getElementById('smoke'); s.innerHTML='';
+  for(var i=0;i<5;i++){ var sp=document.createElement('span');
+    sp.style.left=(i*7-14)+'px'; sp.style.animationDelay=(i*0.5)+'s'; s.appendChild(sp); }
+  smokeInited=true;
+}
+function smokeSpeed(rate){
+  if(!smokeInited) initSmoke();
+  var dur=(3.2/Math.max(0.4,rate)).toFixed(2)+'s';
+  document.querySelectorAll('#smoke span').forEach(function(sp){ sp.style.animationDuration=dur; });
+}
+
+function succeed(){
+  solved=true;
+  glow.style.opacity=1;
+  porcelain.classList.add('on');
+  syncCap.textContent='同步完成 100%';
+  setTimeout(function(){ done.classList.add('show'); }, 700);
+}
+</script>
+</body>
+</html>
