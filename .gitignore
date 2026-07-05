@@ -13,3 +13,6 @@ __pycache__/
 # 系统 / 工具文件
 .DS_Store
 .claude/
+
+# 原始素材备份（大文件，不入库）
+assets/_original/
