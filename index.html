@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=393, initial-scale=1.0">
-<title>遗失的母带 · 稻香密室（图片版）</title>
+<title>音乐密室闯关</title>
 <style>
   :root{
     --straw:#d9b46a; --straw-d:#a8842f; --paper:#e9dcc0; --ink:#2c2114;
@@ -282,7 +282,7 @@
   #usecard{background:
     radial-gradient(100% 38% at 50% 0%,rgba(47,157,89,.09),transparent 62%),
     linear-gradient(180deg,#edf3f0 0%,#f3f5f7 40%);justify-content:flex-start}
-  .uc-body{flex:1;overflow-y:auto;padding:18px 18px 104px}
+  .uc-body{flex:1;overflow-y:auto;padding:18px 18px 104px;display:flex;flex-direction:column;justify-content:center}
   .card-row{display:flex;align-items:center;gap:12px;background:#fff;border-radius:16px;padding:16px;border:1px solid #efeaff;box-shadow:0 12px 28px rgba(120,90,230,.10)}
   .card-row .cr-ic{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#8b7cf0,#a774e0);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0}
   .card-row .cr-name{font-size:15px;font-weight:800;color:#222}
@@ -320,9 +320,9 @@
   .pf-body{flex:1;overflow-y:auto;padding:14px 14px 74px}
   .pf-user{display:flex;align-items:center;gap:12px}
   .pf-user .pav{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#f7b7c8,#f7d7a0);position:relative;flex-shrink:0}
-  .pf-user .pav .wear{position:absolute;bottom:-2px;left:-2px;width:24px;height:24px;border-radius:50%;background:linear-gradient(160deg,#d8b88a,#b8895a);border:2px solid #f1f3f5;display:flex;align-items:center;justify-content:center;font-size:11px}
+  .pf-user .pav .wear{position:absolute;bottom:-3px;left:-3px;width:28px;height:28px;border-radius:50%;background:linear-gradient(160deg,#faf8f2,#e9e2cf);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
   .pf-user .pnm{font-size:19px;font-weight:900;color:#222;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .pf-user .pbadge{font-size:10.5px;color:#b8895a;background:#f7edda;border-radius:10px;padding:2px 8px;font-weight:700}
+  .pf-user .pbadge{display:inline-block;font-size:10.5px;color:#b8895a;background:#f7edda;border-radius:10px;padding:2px 8px;font-weight:700}
   .pf-user .pv{margin-left:auto;text-align:right}
   .pf-user .pv .coin{font-size:20px;font-weight:900;color:#222}
   .pf-user .pv .coin .y{color:#f0b429;font-size:13px}
@@ -330,7 +330,7 @@
   .pf-vip{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:11px}
   .pf-vip .vtag{background:linear-gradient(135deg,#f0c75e,#e0a83a);color:#5a3d09;font-weight:800;border-radius:6px;padding:2px 8px}
   .pf-vip .vren{color:#b58a3a}
-  .pf-vip .vbd{color:#e0567a;background:#fdeef2;border-radius:8px;padding:2px 8px}
+  .pf-vip .vbd{color:#8a6a2f;background:#f7edda;border-radius:8px;padding:2px 8px}
   .pf-member{display:flex;align-items:center;margin-top:14px}
   .pf-member .mc{font-size:14px;font-weight:800;color:#2f9d59}
   .pf-member .msub{font-size:11px;color:#616b73;margin-left:8px}
@@ -345,15 +345,58 @@
   .pf-badges .bh .bt{font-size:14px;font-weight:800;color:#222}
   .pf-badges .bh .ba{font-size:12px;color:#616b73}
   .badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-  .badge-item{text-align:center}
-  .badge-item .bi{width:66px;height:66px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:inset 0 0 0 3px rgba(255,255,255,.35),0 5px 14px rgba(0,0,0,.12)}
-  .badge-item.b-milk .bi{background:linear-gradient(160deg,#d8b88a,#b8895a)}
-  .badge-item.b-star .bi{background:linear-gradient(160deg,#8fb0f0,#6d84e0)}
-  .badge-item.b-vinyl .bi{background:linear-gradient(160deg,#3a3a3a,#111)}
+  .badge-item{text-align:center;position:relative;cursor:pointer}
+  /* 统一中性底：类别靠形状区分，彩色只属于 emoji 本身和佩戴态 */
+  .badge-item .bi{width:66px;height:66px;border-radius:50%;margin:0 auto 8px;position:relative;
+    display:flex;align-items:center;justify-content:center;font-size:30px;
+    background:linear-gradient(160deg,#faf8f2,#ece7da);
+    box-shadow:inset 0 0 0 1px rgba(90,110,95,.10),0 3px 8px rgba(60,90,70,.10)}
+  /* 佩戴中：绿描边 + ✓ 角标 */
+  .badge-item.worn .bi{box-shadow:inset 0 0 0 2.5px #2f9d59,0 3px 8px rgba(47,157,89,.16)}
+  .badge-item.worn .bi::after{content:"✓";position:absolute;top:-3px;right:-3px;width:19px;height:19px;
+    border-radius:50%;background:#2f9d59;color:#fff;font-size:11px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;border:1.5px solid #fff;
+    box-shadow:0 1px 4px rgba(0,0,0,.25)}
+  /* 未解锁：灰度半透明 + 🔒 角标，点击无反馈 */
+  .badge-item.locked{cursor:default}
+  .badge-item.locked .bi{filter:grayscale(1);opacity:.5}
+  .badge-item.locked::after{content:"🔒";position:absolute;top:-4px;left:50%;margin-left:18px;font-size:13px}
+  /* 挂件：分离的外环，暗示"套在头像外" */
+  .badge-item.pd .bi::before{content:"";position:absolute;inset:-6px;border-radius:50%;
+    border:2.5px solid #d9cba4;pointer-events:none}
+  .badge-item.pd.worn .bi::before{border-color:#2f9d59}
+  .badge-item.pd.worn .bi{box-shadow:inset 0 0 0 1px rgba(90,110,95,.10),0 3px 8px rgba(47,157,89,.16)}
+  /* 贴纸：裸 emoji 放大，无容器 */
+  .badge-item.stk .bi{background:none;box-shadow:none;font-size:42px}
+  .badge-item.stk.worn .bi{box-shadow:none}
+  .badge-modal{position:absolute;inset:0;z-index:40;display:none;align-items:flex-end;background:rgba(20,30,26,.5)}
+  .badge-modal.show{display:flex;animation:fade .3s}
+  .bm-sheet{background:#fff;width:100%;max-height:80%;border-radius:18px 18px 0 0;padding:16px 16px 26px;overflow-y:auto;box-shadow:0 -8px 30px rgba(0,0,0,.25)}
+  .bm-head{display:flex;justify-content:space-between;align-items:center}
+  .bm-head .t{font-size:16px;font-weight:800;color:#222}
+  .bm-head .x{font-size:18px;color:#9aa4ad;cursor:pointer}
+  .bm-note{font-size:11.5px;color:#9aa4ad;margin:6px 0 14px}
+  .bm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 6px}
   .badge-item .bn{font-size:12px;font-weight:700;color:#333}
   .badge-item .bs{font-size:10.5px;margin-top:4px}
   .badge-item .bs.on{color:#2f9d59}
   .badge-item .bs.lock{color:#616b73}
+  /* 我的奖励：分类页签 + 三类奖励网格 */
+  .rw-tabs{display:flex;gap:8px;margin-bottom:13px}
+  .rw-tab{font-size:12px;font-weight:700;color:#616b73;background:#f1f4f2;border:none;
+    border-radius:14px;padding:5px 14px;cursor:pointer;transition:.15s}
+  .rw-tab .n{font-size:10.5px;opacity:.6;margin-left:3px}
+  .rw-tab.on{color:#fff;background:#2f9d59}
+  .rw-grid{display:none;grid-template-columns:repeat(3,1fr);gap:6px;padding-top:6px}
+  .rw-grid.on{display:grid;animation:rwfade .22s ease}
+  @keyframes rwfade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .badge-item .bs.act{color:#8a949c}
+  .bm-sec{font-size:12.5px;font-weight:800;color:#333;margin:16px 2px 10px}
+  .bm-sec .cnt{font-size:11px;color:#9aa4ad;font-weight:600;margin-left:5px}
+  .bm-grid{padding-top:6px}
+  /* 已贴主页的贴纸：Profile 页右上区域 */
+  .pf-sticker{position:absolute;top:150px;right:14px;z-index:5;font-size:38px;
+    transform:rotate(12deg);filter:drop-shadow(0 3px 5px rgba(0,0,0,.18));pointer-events:none}
   .tabbar{position:absolute;left:0;right:0;bottom:0;height:56px;background:#fff;border-top:1px solid #eaedf0;display:grid;grid-template-columns:repeat(5,1fr);align-items:center}
   .tabbar .tb{text-align:center;font-size:10.5px;color:#616b73;cursor:pointer}
   .tabbar .tb .tbi{font-size:17px;display:block;margin-bottom:1px}
@@ -381,6 +424,14 @@
   .gr-bar.orange i{background:linear-gradient(90deg,#f39a5c,#ef6f6f)}
   .gr-sub{font-size:11px;color:#616b73;margin-top:7px;line-height:1.5}
   .gr-sub b{color:#e07a3a}
+  /* 通关屏：下一关奖励预告 */
+  .next-reward{width:100%;max-width:340px;margin:14px auto 0;background:#fff;border:1px solid #ece6da;
+    border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:14px;text-align:left;
+    box-shadow:0 12px 30px rgba(120,100,60,.10)}
+  .next-reward .nr-ico{font-size:34px;transform:rotate(-8deg);flex-shrink:0;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.15))}
+  .next-reward .nr-t{font-size:13.5px;font-weight:800;color:#243528}
+  .next-reward .nr-d{font-size:11.5px;color:#6e6353;margin-top:3px;line-height:1.5}
   .growx-hero{text-align:center;padding:8px 0 2px}
   .gx-exp{font-size:40px;font-weight:900;color:#2f9d59;letter-spacing:1px;line-height:1;text-shadow:0 4px 18px rgba(47,157,89,.25)}
   .gx-exp span{font-size:15px;font-weight:800;margin-left:4px}
@@ -412,32 +463,32 @@
   <section class="screen active" id="home">
     <div class="hbar">
       <span class="nav" onclick="alert('Demo：返回上一页')">‹</span>
-      <span class="htitle">曲风大闯关</span>
+      <span class="htitle">音乐密室闯关</span>
       <span class="nav" onclick="shareBrag()">⤴</span>
     </div>
     <div class="home-body">
       <div class="event-pill">● 20周年限时活动</div>
       <div class="home-vinyl"><div class="hv-cover" id="homeVinylCover"></div></div>
-      <div class="home-title">曲风大闯关</div>
+      <div class="home-title">音乐密室闯关</div>
       <div class="home-sub">音乐解谜 · 逃出密室赢取专属曲风勋章</div>
-      <div class="progress-pill">当前进度 <b>第 8 关</b> / 共 30 关</div>
+      <div class="progress-pill">当前进度 <b>第 1 关</b> / 共 10 关</div>
       <div class="home-stats">
         <div class="st"><div class="si">🏅</div><div class="v">3</div><div class="k">已得勋章</div></div>
         <div class="st"><div class="si">🔥</div><div class="v">7</div><div class="k">连胜</div></div>
         <div class="st"><div class="si">🏆</div><div class="v hl">5%</div><div class="k">排名 Top</div></div>
       </div>
-      <div class="home-secttl">选择曲风主题</div>
-      <div class="theme-card" onclick="alert('Demo：切换曲风主题')">
-        <div class="ti">🎵</div>
-        <div><div class="tn">民谣 · Folk</div><div class="tc">共 8 种曲风可选</div></div>
-        <div class="tchev">›</div>
-      </div>
-      <div class="song-meta" id="songMeta" style="display:none">
+      <div class="home-secttl">本期曲目</div>
+      <div class="song-meta" id="songMeta" style="display:none;cursor:pointer" onclick="go('intro')">
         <div class="sm-cover" id="smCover">🎵</div>
         <div class="sm-info"><div class="sm-title" id="smTitle">—</div><div class="sm-tag" id="smTag">数据来自 QQ音乐 OpenAPI</div></div>
       </div>
+      <div class="song-meta" id="nextLevelCard" style="cursor:pointer" onclick="location.href='qinghuaci_p1.html'">
+        <div class="sm-cover" id="nlCover">🏺</div>
+        <div class="sm-info"><div class="sm-title" id="nlTitle">青花瓷 · 周杰伦</div><div class="sm-tag">下一关 · 中国风密室 →</div></div>
+      </div>
       <div class="home-foot">
-        <button class="gbtn" onclick="startBgm();go('intro')">▶  开始游戏</button>
+        <button class="gbtn" onclick="go('intro')">▶  开始游戏</button>
+        <button class="gbtn ghost" style="margin-top:10px" onclick="go('profile')">👤 我的主页</button>
         <div class="daily-left">今日剩余挑战次数 3 / 5</div>
       </div>
     </div>
@@ -453,7 +504,7 @@
         如果你看到一台穿梭时间的钟反着走，把时间倒回去，你会明白什么是真正的快乐。
       </p>
       <p class="pscript">ps：奶茶要半糖，全糖会胖。</p>
-      <button class="btn" style="margin-top:22px" onclick="startBgm();go('game');setScene('farm')">推开农舍木门 →</button>
+      <button class="btn" style="margin-top:22px" onclick="go('game');setScene('farm')">推开农舍木门 →</button>
     </div>
   </section>
 
@@ -590,9 +641,9 @@
           <div class="uhead"><span>本关奖励</span><span class="ux">EXP</span></div>
           <div class="uicon">✨</div>
           <div class="ugenre">+250 经验</div>
-          <div class="usub">周杰伦喜欢值 · 离 Lv.5 更近一步</div>
+          <div class="usub">周杰伦喜欢值 · 已升至 Lv.4</div>
         </div>
-        <p class="udesc">喜欢值已计入周杰伦，<br>升到 Lv.5 即可解锁专属勋章。</p>
+        <p class="udesc">喜欢值已计入周杰伦，<br>Lv.4 达成，奶茶勋章已解锁！</p>
         <button class="gbtn" style="margin-top:4px" onclick="closeModal('rewardModal');go('cleared')">查看成长</button>
         <button class="gbtn ghost" style="margin-top:8px" onclick="closeModal('rewardModal')">稍后再说</button>
       </div>
@@ -610,9 +661,13 @@
     <div class="grow-card">
       <div class="grow-row" style="margin-bottom:4px">
         <div class="gr-top"><span>🥤 周杰伦 · 喜欢值</span><span class="gr-lv orange">Lv.4</span></div>
-        <div class="gr-bar orange"><i style="width:78%"></i></div>
-        <div class="gr-sub">再通关 <b>1 次</b> 即可升 Lv.5，解锁周杰伦专属勋章</div>
+        <div class="gr-bar orange"><i style="width:100%"></i></div>
+        <div class="gr-sub">已升至 <b>Lv.4</b>，「周杰伦·奶茶」勋章已解锁</div>
       </div>
+    </div>
+    <div class="next-reward">
+      <span class="nr-ico">🏺</span>
+      <div><div class="nr-t">下一关可得 · 主页贴纸</div><div class="nr-d">青花瓷·瓷纹，通关《青花瓷》即可贴上你的主页</div></div>
     </div>
     <div class="cl-btns">
       <button class="gbtn" onclick="go('usecard')">查看成长详情</button>
@@ -640,17 +695,17 @@
           <div class="schg" style="color:#e07a3a;font-weight:800">Lv.4</div>
         </div>
         <div class="lv-row">
-          <span class="lv-tag">Lv.4</span>
+          <span class="lv-tag">Lv.3</span>
           <span class="lv-bar"><i id="lvFill"></i></span>
-          <span class="lv-tag">Lv.5</span>
+          <span class="lv-tag">Lv.4</span>
         </div>
-        <div class="lv-note">升到 <b>Lv.5</b> 解锁周杰伦专属勋章</div>
+        <div class="lv-note"><b>Lv.4</b> 达成，「周杰伦·奶茶」勋章已解锁</div>
       </div>
       <div class="unlock-box">
-        <div class="ub-top">🔒 升至 Lv.5 解锁专属勋章</div>
+        <div class="ub-top">🎉 通关解锁 · 专属勋章</div>
         <div class="unlock-badge">
           <div class="bg">🧋</div>
-          <div><div class="bn">周杰伦 · 奶茶勋章</div><div class="bd">解锁后可佩戴在你的个人主页头像与昵称旁</div></div>
+          <div><div class="bn">周杰伦 · 奶茶勋章</div><div class="bd">已解锁！领取后即可佩戴在你的主页头像与昵称旁</div></div>
         </div>
       </div>
       <div class="uc-tip">💡 经验自动累积、无需手动使用道具；升满即时生效。</div>
@@ -662,6 +717,7 @@
 
   <!-- 04 个人主页 -->
   <section class="screen" id="profile">
+    <span class="pf-sticker" id="wornSticker">🌾</span>
     <div class="pf-search">
       <span class="ps-ic">♪</span>
       <span class="ps-t">听我想听</span>
@@ -669,14 +725,14 @@
     </div>
     <div class="pf-body">
       <div class="pf-user">
-        <div class="pav"><span class="wear">🧋</span></div>
+        <div class="pav"><span class="wear" id="wornPendant">🌾</span></div>
         <div>
-          <div class="pnm">Sapphire <span class="pbadge">🧋 周杰伦·奶茶</span></div>
+          <div class="pnm">Sapphire <span class="pbadge" id="wornMedal" style="display:none"></span></div>
         </div>
         <div class="pv"><div class="coin">88 <span class="y">V</span></div><div class="cash">领现金 ›</div></div>
       </div>
       <div class="pf-vip">
-        <span class="vtag">VIP</span><span class="vren">续费 ¥15</span><span class="vbd">★ 3 勋章</span>
+        <span class="vtag">VIP</span><span class="vren">续费 ¥15</span><span class="vbd">★ 13 奖励</span>
       </div>
       <div class="pf-member">
         <span class="mc">会员中心 ›</span><span class="msub">首购价 · 15 元开超会</span>
@@ -693,11 +749,26 @@
         <div class="n"><div class="nv">7</div><div class="nk">已购</div></div>
       </div>
       <div class="pf-badges">
-        <div class="bh"><span class="bt">我的勋章</span><span class="ba">全部 3 ›</span></div>
-        <div class="badge-grid">
-          <div class="badge-item b-milk" id="badgeMilk"><div class="bi">🧋</div><div class="bn">周杰伦·奶茶</div><div class="bs on">佩戴中</div></div>
-          <div class="badge-item b-star"><div class="bi">⭐</div><div class="bn">周深·星河</div><div class="bs lock">Lv.5 解锁</div></div>
-          <div class="badge-item b-vinyl"><div class="bi">💿</div><div class="bn">Eason·黑胶</div><div class="bs lock">Lv.5 解锁</div></div>
+        <div class="bh"><span class="bt">我的奖励</span><span class="ba" style="cursor:pointer" onclick="openBadges()">全部 13 ›</span></div>
+        <div class="rw-tabs">
+          <button class="rw-tab on" id="rwtab_medal" onclick="switchReward('medal')">勋章<span class="n">7</span></button>
+          <button class="rw-tab" id="rwtab_pendant" onclick="switchReward('pendant')">挂件<span class="n">3</span></button>
+          <button class="rw-tab" id="rwtab_sticker" onclick="switchReward('sticker')">贴纸<span class="n">3</span></button>
+        </div>
+        <div class="rw-grid on" id="rw_medal">
+          <div class="badge-item locked" id="badgeMilk" data-cat="medal" data-key="milk" data-icon="🧋" data-name="周杰伦·奶茶" onclick="wearItem(this)"><div class="bi">🧋</div><div class="bn">周杰伦·奶茶</div><div class="bs lock">Lv.4 解锁</div></div>
+          <div class="badge-item locked"><div class="bi">⭐</div><div class="bn">周深·星河</div><div class="bs lock">Lv.5 解锁</div></div>
+          <div class="badge-item locked"><div class="bi">💿</div><div class="bn">Eason·黑胶</div><div class="bs lock">Lv.5 解锁</div></div>
+        </div>
+        <div class="rw-grid" id="rw_pendant">
+          <div class="badge-item pd worn" data-cat="pendant" data-key="wheat" data-icon="🌾" data-name="稻香·麦穗" onclick="wearItem(this)"><div class="bi">🌾</div><div class="bn">稻香·麦穗</div><div class="bs on">佩戴中</div></div>
+          <div class="badge-item pd" data-cat="pendant" data-key="phones" data-icon="🎧" data-name="本色·耳机" onclick="wearItem(this)"><div class="bi">🎧</div><div class="bn">本色·耳机</div><div class="bs act">点击佩戴</div></div>
+          <div class="badge-item pd locked"><div class="bi">🏮</div><div class="bn">中国风·灯笼</div><div class="bs lock">Lv.4 解锁</div></div>
+        </div>
+        <div class="rw-grid" id="rw_sticker">
+          <div class="badge-item stk worn" data-cat="sticker" data-key="field" data-icon="🌾" data-name="稻香·田野" onclick="wearItem(this)"><div class="bi">🌾</div><div class="bn">稻香·田野</div><div class="bs on">已贴主页</div></div>
+          <div class="badge-item stk locked"><div class="bi">🏺</div><div class="bn">青花瓷·瓷纹</div><div class="bs lock">第 2 关解锁</div></div>
+          <div class="badge-item stk locked"><div class="bi">🎹</div><div class="bn">夜曲·黑键</div><div class="bs lock">Lv.4 解锁</div></div>
         </div>
       </div>
     </div>
@@ -707,6 +778,36 @@
       <div class="tb"><span class="tbi">◎</span>刷歌</div>
       <div class="tb"><span class="tbi">☆</span>星光</div>
       <div class="tb on"><span class="tbi">👤</span>我的</div>
+    </div>
+
+    <!-- 全部奖励弹层 -->
+    <div class="badge-modal" id="badgeModal">
+      <div class="bm-sheet">
+        <div class="bm-head"><span class="t">全部奖励 · 13</span><span class="x" onclick="closeBadges()">✕</span></div>
+        <div class="bm-note">通关收集：勋章戴在昵称旁，挂件绕着头像，贴纸装扮主页</div>
+        <div class="bm-sec">勋章<span class="cnt">7</span></div>
+        <div class="bm-grid">
+          <div class="badge-item locked" data-cat="medal" data-key="milk" data-icon="🧋" data-name="周杰伦·奶茶" onclick="wearItem(this)"><div class="bi">🧋</div><div class="bn">周杰伦·奶茶</div><div class="bs lock">Lv.4 解锁</div></div>
+          <div class="badge-item" data-cat="medal" data-key="cocktail" data-icon="🍸" data-name="周杰伦·鸡尾酒" onclick="wearItem(this)"><div class="bi">🍸</div><div class="bn">周杰伦·鸡尾酒</div><div class="bs act">点击佩戴</div></div>
+          <div class="badge-item" data-cat="medal" data-key="coffee" data-icon="☕" data-name="周杰伦·咖啡" onclick="wearItem(this)"><div class="bi">☕</div><div class="bn">周杰伦·咖啡</div><div class="bs act">点击佩戴</div></div>
+          <div class="badge-item locked"><div class="bi">☀️</div><div class="bn">周杰伦·太阳</div><div class="bs lock">Lv.3 解锁</div></div>
+          <div class="badge-item locked"><div class="bi">🎈</div><div class="bn">周杰伦·气球</div><div class="bs lock">Lv.4 解锁</div></div>
+          <div class="badge-item locked"><div class="bi">⭐</div><div class="bn">周深·星河</div><div class="bs lock">Lv.5 解锁</div></div>
+          <div class="badge-item locked"><div class="bi">💿</div><div class="bn">Eason·黑胶</div><div class="bs lock">Lv.5 解锁</div></div>
+        </div>
+        <div class="bm-sec">头像挂件<span class="cnt">3</span></div>
+        <div class="bm-grid">
+          <div class="badge-item pd worn" data-cat="pendant" data-key="wheat" data-icon="🌾" data-name="稻香·麦穗" onclick="wearItem(this)"><div class="bi">🌾</div><div class="bn">稻香·麦穗</div><div class="bs on">佩戴中</div></div>
+          <div class="badge-item pd" data-cat="pendant" data-key="phones" data-icon="🎧" data-name="本色·耳机" onclick="wearItem(this)"><div class="bi">🎧</div><div class="bn">本色·耳机</div><div class="bs act">点击佩戴</div></div>
+          <div class="badge-item pd locked"><div class="bi">🏮</div><div class="bn">中国风·灯笼</div><div class="bs lock">Lv.4 解锁</div></div>
+        </div>
+        <div class="bm-sec">主页贴纸<span class="cnt">3</span></div>
+        <div class="bm-grid">
+          <div class="badge-item stk worn" data-cat="sticker" data-key="field" data-icon="🌾" data-name="稻香·田野" onclick="wearItem(this)"><div class="bi">🌾</div><div class="bn">稻香·田野</div><div class="bs on">已贴主页</div></div>
+          <div class="badge-item stk locked"><div class="bi">🏺</div><div class="bn">青花瓷·瓷纹</div><div class="bs lock">第 2 关解锁</div></div>
+          <div class="badge-item stk locked"><div class="bi">🎹</div><div class="bn">夜曲·黑键</div><div class="bs lock">Lv.4 解锁</div></div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -736,13 +837,14 @@ function toggleBgm(){ if(!bgm)return;
   if(bgm.paused){ bgm.volume=0.5; bgm.play().catch(()=>{}); document.getElementById('bgmBtn').textContent='🔊'; }
   else { bgm.pause(); document.getElementById('bgmBtn').textContent='🔈'; } }
 /* 兜底：首次任意点击/触摸都尝试开始播放（规避自动播放限制） */
-['click','touchstart','keydown'].forEach(ev=>document.addEventListener(ev,function _o(){startBgm();},{once:true}));
+/* 首页/一关不再自动播放音乐；如需播放点右上角 🔈 按钮 */
 
 const state={poster:false,plane:false,tea:false,lockStage:0};
 const titles={farm:'序幕 · 稻香农场',scare:'第一幕 · 稻草人',tea:'第二幕 · 窗台奶茶',vault:'第三幕 · 反方向的钟'};
 
 function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');}
+  document.getElementById(id).classList.add('active');
+  if(id==='intro'||id==='game') startBgm();}  // 进入稻香关即起背景乐（点击进入属于用户手势）
 function setScene(name){
   ['farm','scare','tea','vault'].forEach(n=>{
     document.getElementById('L_'+n).classList.toggle('active',n===name);
@@ -892,8 +994,33 @@ function runFinale(){
   setTimeout(()=>document.getElementById('cine').classList.add('hide'),6200);
   setTimeout(()=>{document.getElementById('ending').classList.add('show1');v.style.transform='translateY(0)';},6800);
 }
-function showRewards(){go('cleared');}
-function nextLevel(){alert('Demo：下一关《七里香》即将解锁～');}
+function showRewards(){applySettlement('dx');go('cleared');}
+function nextLevel(){ location.href='qinghuaci_p1.html'; }
+function openBadges(){ document.getElementById('badgeModal').classList.add('show'); }
+function closeBadges(){ document.getElementById('badgeModal').classList.remove('show'); }
+function switchReward(cat){
+  ['medal','pendant','sticker'].forEach(function(c){
+    document.getElementById('rw_'+c).classList.toggle('on',c===cat);
+    document.getElementById('rwtab_'+c).classList.toggle('on',c===cat);
+  });
+}
+/* 佩戴切换：每类同时只戴一个，卡片与弹层内同 key 的格子联动 */
+function wearItem(el){
+  if(el.classList.contains('locked')) return;
+  var cat=el.dataset.cat, key=el.dataset.key;
+  document.querySelectorAll('.badge-item[data-cat="'+cat+'"]').forEach(function(it){
+    var same=it.dataset.key===key;
+    it.classList.toggle('worn',same);
+    var bs=it.querySelector('.bs');
+    bs.className='bs '+(same?'on':'act');
+    bs.textContent=same?(cat==='sticker'?'已贴主页':'佩戴中'):(cat==='sticker'?'点击贴上':'点击佩戴');
+  });
+  var target;
+  if(cat==='medal'){ target=document.getElementById('wornMedal'); target.textContent=el.dataset.icon+' '+el.dataset.name; target.style.display='inline-block'; }
+  else if(cat==='pendant'){ target=document.getElementById('wornPendant'); target.textContent=el.dataset.icon; }
+  else { target=document.getElementById('wornSticker'); target.textContent=el.dataset.icon; }
+  target.classList.remove('badge-pop'); void target.offsetWidth; target.classList.add('badge-pop');
+}
 function rainGrain(){const wrap=document.getElementById('fwrap');
   for(let i=0;i<26;i++){const g=document.createElement('div');g.className='grain';g.textContent='🌾';
     g.style.left=Math.random()*100+'%';g.style.fontSize=(10+Math.random()*16)+'px';
@@ -915,10 +1042,111 @@ function confirmUpgrade(){
   if(fill) fill.style.width='100%';           // 周杰伦喜欢值升满 → Lv.5，解锁勋章
   setTimeout(function(){
     go('profile');
-    var b=document.getElementById('badgeMilk');
-    if(b) b.classList.add('badge-pop');
+    if(qhcMode){
+      switchReward('sticker');
+      var s=document.querySelector('#rw_sticker .badge-item[data-key="porcelain"]');
+      if(s){ wearItem(s); s.classList.add('badge-pop'); }
+    }else{
+      var b=document.getElementById('badgeMilk');
+      if(b && !b.classList.contains('locked')){ wearItem(b); b.classList.add('badge-pop'); }
+    }
   }, 950);
 }
+
+/* ===== 结算文案配置：两关共用结算屏，进入前按“刚通关的关卡”整体刷新 ===== */
+var qhcMode=false;
+function applySettlement(mode){
+  qhcMode = mode==='qhc';
+  var q=function(sel){return document.querySelector(sel);};
+  var lvTags=document.querySelectorAll('#usecard .lv-tag');
+  var fill=document.getElementById('lvFill');
+  if(qhcMode){
+    // ── 青花瓷：+300，Lv.4 → Lv.5，解锁瓷纹贴纸 ──
+    q('#rewardModal .note').textContent='通关《青花瓷》· 连胜 +2';
+    q('#rewardModal .uicon').textContent='🏺';
+    q('#rewardModal .ugenre').textContent='+300 经验';
+    q('#rewardModal .usub').textContent='周杰伦喜欢值 · 已升至 Lv.5';
+    q('#rewardModal .udesc').innerHTML='喜欢值已计入周杰伦，<br>Lv.5 达成，专属奖励已解锁！';
+    q('#cleared .cl-meta').textContent='解开全部 6 个谜题 · 用时 06:48 · 连胜 +2';
+    q('#cleared .exp-medal').innerHTML='+300<span class="em-u">喜欢值</span>';
+    q('#cleared .gr-lv').textContent='Lv.5';
+    q('#cleared .gr-bar i').style.width='100%';
+    q('#cleared .gr-sub').innerHTML='已升至 <b>Lv.5</b>，主页贴纸「青花瓷·瓷纹」已解锁';
+    q('#cleared .nr-ico').textContent='🎹';
+    q('#cleared .nr-d').textContent='夜曲·黑键，通关《夜曲》即可贴上你的主页';
+    q('#usecard .gx-exp').innerHTML='+300 <span>喜欢值</span>';
+    q('#usecard .gx-cap').textContent='通关《青花瓷 · 中国风》· 关联歌手 周杰伦';
+    q('#usecard .schg').textContent='Lv.5';
+    lvTags[0].textContent='Lv.4'; lvTags[1].textContent='Lv.5';
+    q('#usecard .lv-note').innerHTML='<b>Lv.5</b> 达成，专属奖励已全部解锁';
+    q('#usecard .ub-top').textContent='🎉 通关解锁 · 主页贴纸';
+    q('#usecard .unlock-badge .bg').textContent='🏺';
+    q('#usecard .unlock-badge .bn').textContent='青花瓷 · 瓷纹贴纸';
+    q('#usecard .unlock-badge .bd').textContent='已解锁！领取后自动贴上你的个人主页';
+    if(fill) fill.style.width='100%';
+  }else{
+    // ── 稻香：+250，Lv.3 → Lv.4，奶茶勋章当场解锁 ──
+    q('#rewardModal .note').textContent='通关《遗失的母带》· 连胜 +1';
+    q('#rewardModal .uicon').textContent='✨';
+    q('#rewardModal .ugenre').textContent='+250 经验';
+    q('#rewardModal .usub').textContent='周杰伦喜欢值 · 已升至 Lv.4';
+    q('#rewardModal .udesc').innerHTML='喜欢值已计入周杰伦，<br>Lv.4 达成，奶茶勋章已解锁！';
+    q('#cleared .cl-meta').textContent='解开全部 5 个谜题 · 用时 04:12 · 连胜 +1';
+    q('#cleared .exp-medal').innerHTML='+250<span class="em-u">喜欢值</span>';
+    q('#cleared .gr-lv').textContent='Lv.4';
+    q('#cleared .gr-bar i').style.width='100%';
+    q('#cleared .gr-sub').innerHTML='已升至 <b>Lv.4</b>，「周杰伦·奶茶」勋章已解锁';
+    q('#cleared .nr-ico').textContent='🏺';
+    q('#cleared .nr-d').textContent='青花瓷·瓷纹，通关《青花瓷》即可贴上你的主页';
+    q('#usecard .gx-exp').innerHTML='+250 <span>喜欢值</span>';
+    q('#usecard .gx-cap').textContent='通关《遗失的母带 · 稻香》· 关联歌手 周杰伦';
+    q('#usecard .schg').textContent='Lv.4';
+    lvTags[0].textContent='Lv.3'; lvTags[1].textContent='Lv.4';
+    q('#usecard .lv-note').innerHTML='<b>Lv.4</b> 达成，「周杰伦·奶茶」勋章已解锁';
+    q('#usecard .ub-top').textContent='🎉 通关解锁 · 专属勋章';
+    q('#usecard .unlock-badge .bg').textContent='🧋';
+    q('#usecard .unlock-badge .bn').textContent='周杰伦 · 奶茶勋章';
+    q('#usecard .unlock-badge .bd').textContent='已解锁！领取后即可佩戴在你的主页头像与昵称旁';
+    if(fill) fill.style.width='100%';
+    // 通关即解锁奶茶勋章（主页奖励卡 + 全部奖励弹层联动），佩戴在「领取成长」时完成
+    document.querySelectorAll('.badge-item[data-key="milk"]').forEach(function(it){
+      if(!it.classList.contains('locked')) return;
+      it.classList.remove('locked');
+      var bs=it.querySelector('.bs'); bs.className='bs act'; bs.textContent='点击佩戴';
+    });
+  }
+}
+
+/* ===== 青花瓷（第2关）通关结算：复用稻香同款流程 ===== */
+function qhcClearFlow(){
+  applySettlement('qhc');
+  // 解锁「青花瓷·瓷纹」贴纸（主页奖励卡 + 全部奖励弹层联动）
+  document.querySelectorAll('.badge-item.locked').forEach(function(it){
+    var bn=it.querySelector('.bn');
+    if(!bn || bn.textContent.indexOf('青花瓷')<0) return;
+    it.classList.remove('locked');
+    it.dataset.cat='sticker'; it.dataset.key='porcelain';
+    it.dataset.icon='🏺'; it.dataset.name='青花瓷·瓷纹';
+    it.onclick=function(){wearItem(it);};
+    var bs=it.querySelector('.bs'); bs.className='bs act'; bs.textContent='点击贴上';
+  });
+  // ⑤ 首页第二关入口标记已通关
+  var nlTag=document.querySelector('#nextLevelCard .sm-tag');
+  if(nlTag) nlTag.innerHTML='✅ 已通关 · 中国风密室（可重玩）';
+  // 弹出结算窗，进入与稻香一致的「查看成长」链路
+  // （弹窗原本嵌在 #game 屏内，落地在 home 屏时父级隐藏，先挪到 #app 根下）
+  var rm=document.getElementById('rewardModal');
+  document.getElementById('app').appendChild(rm);
+  rm.classList.add('show');
+}
+(function(){
+  try{
+    if(new URLSearchParams(location.search).get('cleared')==='qhc'){
+      qhcClearFlow();
+      history.replaceState(null,'',location.pathname);  // 用掉即清参数：刷新/重进不再重复触发结算
+    }
+  }catch(e){}
+})();
 
 /* ===== #9 接真实 QQ音乐搜索：加载本关曲目元数据 ===== */
 function fillSongMeta(m){
@@ -931,7 +1159,7 @@ function fillSongMeta(m){
     var cov=document.getElementById('smCover');
     if(pic){ cov.style.backgroundImage="url('"+pic+"')"; cov.textContent=''; }
     document.getElementById('smTag').textContent =
-      (m.source==='qqmusic') ? '数据来自 QQ音乐 OpenAPI' : '内置数据（未接后端）';
+      (m.source==='qqmusic') ? '第 1 关 · 稻香农场密室 →（数据来自 QQ音乐）' : '第 1 关 · 稻香农场密室 →';
     // 主页 & 结局黑胶中心换成专辑封面
     if(pic){
       var hv=document.getElementById('homeVinylCover');
@@ -955,6 +1183,15 @@ function fillSinger(m){
     }
   }catch(e){}
 }
+function fillNextLevel(m){
+  try{
+    if(!m || m.source!=='qqmusic') return;   // mock 不覆盖，保留默认「青花瓷」文案
+    var cov=document.getElementById('nlCover');
+    if(cov && m.album_pic){ cov.style.backgroundImage="url('"+m.album_pic+"')"; cov.textContent=''; }
+    var t=document.getElementById('nlTitle');
+    if(t && m.song_name){ t.textContent=m.song_name + (m.singer_name ? ' · '+m.singer_name : ''); }
+  }catch(e){}
+}
 (function(){
   fetch('/api/song?name=' + encodeURIComponent('稻香'))
     .then(function(r){ return r.json(); })
@@ -963,6 +1200,10 @@ function fillSinger(m){
   fetch('/api/singer?name=' + encodeURIComponent('周杰伦'))
     .then(function(r){ return r.json(); })
     .then(fillSinger)
+    .catch(function(){});
+  fetch('/api/song?name=' + encodeURIComponent('青花瓷'))
+    .then(function(r){ return r.json(); })
+    .then(fillNextLevel)
     .catch(function(){});
 })();
 </script>

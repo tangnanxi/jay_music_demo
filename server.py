@@ -16,7 +16,8 @@
 没有配置 QQ_APP_ID / QQ_APP_KEY 时，/api/song 会返回内置 mock 数据，
 demo 依然可跑（路演不怕断网/没 key）。
 """
-import os, time, json, hmac, hashlib, urllib.parse, urllib.request, urllib.error
+import os, re, time, json, hmac, hashlib, base64, binascii
+import urllib.parse, urllib.request, urllib.error
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -57,6 +58,20 @@ MOCK_SINGER = {
     "song_num": 0,
     "note": "未配置 QQ_APP_ID / QQ_APP_KEY，返回内置数据",
 }
+
+MOCK_LYRIC = {
+    "source": "mock",
+    "song_name": "青花瓷",
+    "singer_name": "周杰伦",
+    "lines": [
+        "素胚勾勒出青花", "笔锋浓转淡", "瓶身描绘的牡丹", "一如你初妆",
+        "冉冉檀香透过窗", "心事我了然", "宣纸上走笔至此搁一半",
+        "釉色渲染仕女图", "韵味被私藏", "天青色等烟雨", "而我在等你",
+    ],
+    "note": "未配置 QQ_APP_ID / QQ_APP_KEY，返回内置歌词",
+}
+# 兜底歌词按每句 4 秒铺时间轴，与前端离线 fallback 的节奏一致
+MOCK_LYRIC["timed"] = [{"t": i * 4.0, "s": s} for i, s in enumerate(MOCK_LYRIC["lines"])]
 
 
 def qyopi_sign(query_str: str, app_key: str, cookie: str = "") -> str:
@@ -203,6 +218,105 @@ def search_singer(query: str) -> dict:
     }
 
 
+def _find_lyric(obj):
+    """递归找出返回体里的 song_lyric 字段（对网关是否包一层做兼容）。"""
+    if isinstance(obj, dict):
+        if obj.get("song_lyric"):
+            return obj["song_lyric"]
+        for v in obj.values():
+            r = _find_lyric(v)
+            if r:
+                return r
+    elif isinstance(obj, list):
+        for v in obj:
+            r = _find_lyric(v)
+            if r:
+                return r
+    return ""
+
+
+_LRC_META = re.compile(r"^(作?词|作?曲|编曲|监制|制作|演唱|混音|录音)\s*[:：]")
+
+
+_LRC_TIME = re.compile(r"\[(\d{1,2}):(\d{1,2})(?:[.:](\d{1,3}))?\]")
+
+
+def _parse_lrc(text: str):
+    """LRC → (纯歌词行列表, 带时间戳行列表)。
+    timed 项形如 {"t": 29.54, "s": "素胚勾勒出青花笔锋浓转淡"}，按 t 升序；
+    一行多时间标签（副歌复用）会展开成多项。"""
+    lines, timed = [], []
+    for raw in text.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        tags = _LRC_TIME.findall(raw)
+        # 去掉所有 [mm:ss.xx] / [ti:...] 标签
+        s = re.sub(r"\[[^\]]*\]", "", raw).strip()
+        if not s or _LRC_META.match(s):
+            continue
+        if not lines and " - " in s:      # 首行常为「歌名 - 歌手」
+            continue
+        lines.append(s)
+        for m, sec, frac in tags:
+            t = int(m) * 60 + int(sec) + (int(frac) / 10 ** len(frac) if frac else 0.0)
+            timed.append({"t": round(t, 2), "s": s})
+    timed.sort(key=lambda x: x["t"])
+    return lines, timed
+
+
+def get_lyric(name: str = "", song_mid: str = "", song_id: str = "") -> dict:
+    """歌词接口：fcg_music_custom_get_lyric.fcg（song_id 与 song_mid 必传其一）。
+    只给歌名时先走搜索拿 song_mid，再取歌词。"""
+    if not APP_ID or not APP_KEY:
+        return dict(MOCK_LYRIC)
+
+    song_name = ""
+    if not song_mid and not song_id:
+        song = search_song(name or "青花瓷")
+        song_mid = song.get("song_mid") or ""
+        song_name = song.get("song_name") or ""
+        if not song_mid:
+            return dict(MOCK_LYRIC, source="mock", note="搜索未拿到 song_mid，回退内置歌词")
+
+    params = [
+        ("opi_cmd", "fcg_music_custom_get_lyric.fcg"),
+        ("app_id", APP_ID),
+        ("timestamp", str(int(time.time()))),
+    ]
+    params.append(("song_mid", song_mid) if song_mid else ("song_id", song_id))
+
+    query = urllib.parse.urlencode(params)
+    sign = qyopi_sign(query, APP_KEY)
+    req = urllib.request.Request(GATEWAY + "?" + query, headers={"X-QYOPI-Sign": sign})
+    try:
+        with urllib.request.urlopen(req, timeout=8) as r:
+            data = json.loads(r.read().decode("utf-8", "replace"))
+    except (urllib.error.URLError, TimeoutError, ValueError) as e:
+        return dict(MOCK_LYRIC, source="mock", note="调用失败，回退内置歌词：%s" % e)
+
+    lyric = _find_lyric(data)
+    if not lyric:
+        return dict(MOCK_LYRIC, source="mock",
+                    note="未拿到 song_lyric（ret=%s msg=%s），回退内置歌词"
+                         % (data.get("ret"), data.get("msg")),
+                    raw_ret=data.get("ret"))
+    # 部分环境 song_lyric 为 base64；不含 LRC 标签时尝试解码
+    if "[" not in lyric:
+        try:
+            lyric = base64.b64decode(lyric).decode("utf-8")
+        except (binascii.Error, UnicodeDecodeError, ValueError):
+            pass
+
+    lines, timed = _parse_lrc(lyric)
+    if not lines:
+        return dict(MOCK_LYRIC, source="mock", note="歌词解析为空，回退内置歌词")
+    return {
+        "source": "qqmusic",
+        "song_name": song_name,
+        "song_mid": song_mid,
+        "lines": lines,
+        "timed": timed,
+    }
+
+
 class Handler(BaseHTTPRequestHandler):
     def _send(self, code, body, ctype="application/json; charset=utf-8"):
         if isinstance(body, str):
@@ -245,6 +359,24 @@ class Handler(BaseHTTPRequestHandler):
                            note="服务异常，回退：%s" % e), ensure_ascii=False))
             return
 
+        if u.path == "/api/lyric":
+            q = urllib.parse.parse_qs(u.query)
+            name = (q.get("name") or ["青花瓷"])[0]
+            try:
+                name = name.encode("latin-1").decode("utf-8")
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                pass
+            song_mid = (q.get("song_mid") or [""])[0]
+            song_id = (q.get("song_id") or [""])[0]
+            try:
+                self._send(200, json.dumps(
+                    get_lyric(name=name, song_mid=song_mid, song_id=song_id),
+                    ensure_ascii=False))
+            except Exception as e:
+                self._send(200, json.dumps(dict(MOCK_LYRIC, source="mock",
+                           note="服务异常，回退：%s" % e), ensure_ascii=False))
+            return
+
         # 静态文件（前端页面）
         path = u.path
         if path in ("/", ""):
@@ -266,8 +398,50 @@ class Handler(BaseHTTPRequestHandler):
         if ext not in ALLOWED:          # 只下发白名单类型，避免泄露 server.py / README 等
             self._send(404, "not found", "text/plain; charset=utf-8")
             return
+        size = os.path.getsize(fp)
+        last_mod = self.date_time_string(int(os.path.getmtime(fp)))
+        # html 每次回源校验，避免拿到旧页面；其余资源允许缓存一天，靠 URL 版本号更新
+        cache_ctl = "no-cache" if ext == ".html" else "max-age=86400"
+        rng = re.match(r"bytes=(\d*)-(\d*)$", self.headers.get("Range") or "")
+        # If-Range 校验：文件已变更时忽略 Range 回整文件，防止新旧文件字节拼成坏图
+        if_range = self.headers.get("If-Range")
+        if if_range and if_range != last_mod:
+            rng = None
         with open(fp, "rb") as f:
-            self._send(200, f.read(), ALLOWED[ext])
+            if rng and (rng.group(1) or rng.group(2)):
+                # Range 支持：音频 seek（bgm.currentTime）与 iOS Safari 播放都依赖 206
+                if rng.group(1):
+                    start = int(rng.group(1))
+                    end = min(int(rng.group(2)) if rng.group(2) else size - 1, size - 1)
+                else:                              # bytes=-N：取末尾 N 字节
+                    start = max(0, size - int(rng.group(2)))
+                    end = size - 1
+                if start >= size or start > end:
+                    self.send_response(416)
+                    self.send_header("Content-Range", "bytes */%d" % size)
+                    self.end_headers()
+                    return
+                f.seek(start)
+                body = f.read(end - start + 1)
+                self.send_response(206)
+                self.send_header("Content-Type", ALLOWED[ext])
+                self.send_header("Content-Range", "bytes %d-%d/%d" % (start, end, size))
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Accept-Ranges", "bytes")
+                self.send_header("Last-Modified", last_mod)
+                self.send_header("Cache-Control", cache_ctl)
+                self.end_headers()
+                self.wfile.write(body)
+            else:
+                body = f.read()
+                self.send_response(200)
+                self.send_header("Content-Type", ALLOWED[ext])
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Accept-Ranges", "bytes")
+                self.send_header("Last-Modified", last_mod)
+                self.send_header("Cache-Control", cache_ctl)
+                self.end_headers()
+                self.wfile.write(body)
 
     def log_message(self, *a):
         pass  # 静默日志

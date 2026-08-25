@@ -121,4 +121,15 @@ server {
 }
 ```
 > 首次接真实接口时，请核对一下真实返回的 JSON 结构（`server.py` 里的 `_find_songs` 已对"是否包一层"做了兼容，但字段以实际为准）。
+
+`GET /api/lyric?name=青花瓷`（或 `?song_mid=xxx` / `?song_id=xxx`，透传 `fcg_music_custom_get_lyric.fcg`）→ 返回：
+```json
+{
+  "source": "qqmusic",       // 或 "mock"（未配 key / 调用失败时回退内置歌词）
+  "song_name": "青花瓷",
+  "song_mid": "...",
+  "lines": ["素胚勾勒出青花笔锋浓转淡", "..."]   // 已剥掉 LRC 时间标签与词曲署名行
+}
+```
+> 只传 `name` 时后端先走搜索拿 `song_mid` 再取歌词；`qinghuaci_p1.html` 的"歌词同步"场景即用此接口实时取《青花瓷》歌词。
 # jay_music_demo
